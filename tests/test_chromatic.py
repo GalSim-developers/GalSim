@@ -2409,9 +2409,8 @@ def test_phot(run_slow):
             t0 = time.time()
             # This is the old way that photon shooting used to work.  The new way will be tested
             # below.  But since it now uses photon_ops, we'll wait to test that last.
-            effective_psf = galsim.ChromaticConvolution._get_effective_prof(
-                    psf*gal.sed, bandpass, integrator='trapezoidal', gsparams=psf.gsparams,
-                    iimult=None)
+            effective_psf = (psf*gal.sed)._get_effective_prof(
+                    bandpass, integrator='trapezoidal', gsparams=psf.gsparams, iimult=None)
             temp_obj = galsim.Convolve(gal_achrom/flux,effective_psf)
             im2 = temp_obj.drawImage(image=im1.copy(), method='phot', rng=rng)
             t1 = time.time()

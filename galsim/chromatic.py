@@ -446,6 +446,49 @@ class ChromaticObject:
             bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
         return integrator, bandpass
 
+    def _get_effective_prof(self, bandpass, iimult, integrator, gsparams, flux_ratio=None):
+        """Integrate this profile with an additional SED weight supplied by outer transformations."""
+        obj = self if flux_ratio is None else self * flux_ratio
+        # Get the actual integrator object, and maybe adjust the bandpass if necessary.
+        wave_list, _, _ = utilities.combine_wave_list(obj, bandpass)
+        integrator, bandpass = obj._get_integrator(integrator, wave_list, bandpass)
+
+        # Evaluate the profiles at the wave values where the integrator will need them.
+        # We save them here in a dict, so we can use this in the integrator, but also
+        # get the stepk/maxk values to set the image size and scale appropriately.
+        profile_dict = {wave: obj.evaluateAtWavelength(wave)
+                        for wave in integrator.calculateWaves(bandpass)}
+        profiles = profile_dict.values()
+
+        # Determine stepk, maxk the normal way we do this for sums so we can force
+        # them when making the InterpolatedImage. In addition to the efficiency benefit of
+        # saving the calls to calculateStepK and calculateMaxK, this is required if the
+        # obj has zero flux, since those cannot calculate either value from the image.
+        prof0 = min(profiles, key=lambda prof: prof.stepk) # We use prof0 again below.
+        stepk = prof0.stepk
+        maxk = max(prof.maxk for prof in profiles)
+        iiscale = math.pi / maxk
+        iiscale /= 2  # This seems to be required to make test_monochromatic_sed to pass.
+                      # Not sure why, since I thought straight nyquist should be good enough.
+                      # But if it's needed there, it's probably worth always doing, rather than
+                      # having that test use iimult=2.  And definitions of Nyquist are somewhat
+                      # confusing, so it's possible that we should expect to need a factor of
+                      # 2 smaller than nyquist for the pixel scale.  :-S
+        if iimult is not None:
+            iiscale /= iimult
+
+        # Set up the image using the one with the smallest stepk (needing the largest image).
+        image = prof0.drawImage(scale=iiscale, method='no_pixel', setup_only=True)
+
+        # The dict __getitem__ function acts like a function of wavelength returning profiles,
+        # which is what the integrator needs.
+        effective_prof_image = integrator(profile_dict.__getitem__, bandpass, image,
+                                          {'method': 'no_pixel'})
+
+        # Use the calculated stepk, maxk directly here.
+        return InterpolatedImage(effective_prof_image, gsparams=gsparams,
+                                 _force_stepk=stepk, _force_maxk=maxk)
+
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Base implementation for drawing an image of a `ChromaticObject`.
 
@@ -1534,6 +1577,10 @@ class InterpolatedChromaticObject(ChromaticObject):
             temp.scaleFlux(len(temp)/len(photons))
             photons._copyFrom(temp, use, slice(None))
 
+    def _get_effective_prof(self, bandpass, iimult, integrator, gsparams, flux_ratio=None):
+        # Integrate on the stored grid without resampling it.
+        return self._get_interp_image(bandpass, integrator=integrator, _flux_ratio=flux_ratio)
+
     def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
         if _flux_ratio is None:
@@ -2149,23 +2196,26 @@ class ChromaticTransformation(ChromaticObject):
 
         return ChromaticTransformationPhotonOp(self)
 
-    def _get_interp_image(self, bandpass, image, integrator, kwargs):
-        # This path is used only when original is an InterpolatedChromaticObject.
-        int_im = self.original._get_interp_image(
-            bandpass, image=image, integrator=integrator, _flux_ratio=self._flux_ratio, **kwargs)
-        # Shape transformations are achromatic, so their wavelength of evaluation is immaterial.
-        jac, offset, _ = self._getTransformations(bandpass.red_limit)
-        return transform.Transform(int_im, jac=jac, offset=_PositionD(*offset),
-                                   gsparams=self._gsparams,
-                                   propagate_gsparams=self._propagate_gsparams)
+    def _get_effective_prof(self, bandpass, iimult, integrator, gsparams, flux_ratio=None):
+        # If we just have a regular (not chromatic) transformation, we get just apply it again
+        # to the effective profile of the original object.
+        if not self.chromatic and self._redshift is None:
+            flux_ratio = self._flux_ratio if flux_ratio is None else flux_ratio * self._flux_ratio
+            prof = self.original._get_effective_prof(
+                bandpass, iimult, integrator, gsparams, flux_ratio)
+            return transform.Transform(prof, jac=self._jac, offset=_PositionD(*self._offset),
+                                       gsparams=self._gsparams,
+                                       propagate_gsparams=self._propagate_gsparams)
+        else:
+            # Otherwise, use the more general implementation in ChromaticObject.
+            return super()._get_effective_prof(bandpass, iimult, integrator, gsparams, flux_ratio)
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """
         See `ChromaticObject.drawImage` for a full description.
 
-        This version usually just calls that one, but if the transformed object (self.original) is
-        an `InterpolatedChromaticObject`, and the transformation is achromatic, then it will still
-        be able to use the interpolation.
+        This version usually just calls that one, but if the transformed object uses interpolation
+        and the transformation is achromatic, then it will still be able to use the interpolation.
 
         Parameters:
             bandpass:       A `Bandpass` object representing the filter against which to
@@ -2188,9 +2238,12 @@ class ChromaticTransformation(ChromaticObject):
         self._last_bp = bandpass
         if self.sed.dimensionless:
             raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
-        if isinstance(self.original, InterpolatedChromaticObject):
-            int_im = self._get_interp_image(bandpass, image, integrator, kwargs)
-            image = int_im.drawImage(image=image, **kwargs)
+        if self.interpolated:
+            # Use the wavelengths at which we interpolated the profile rather than draw this at
+            # new wavelengths. The implementation below would be both inefficient and inaccurate
+            # compared to using the interpolation wavelengths.
+            prof = self._get_effective_prof(bandpass, None, integrator, self.gsparams)
+            image = prof.drawImage(image=image, **kwargs)
         elif kwargs.get('method',None) == 'phot':
             # Need to calculate n_photons now using the fiducial profile, not self.original,
             # since the transformation may (often does) change the flux.
@@ -2831,55 +2884,6 @@ class ChromaticConvolution(ChromaticObject):
             ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
         return ret
 
-    @staticmethod
-    def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams):
-        # Early return for types that already have a straightforward effective profile.
-        # This avoids an extra unnecessary resampling step.
-        if isinstance(insep_obj, InterpolatedChromaticObject):
-            return insep_obj._get_interp_image(bandpass, integrator=integrator)
-        elif (isinstance(insep_obj, ChromaticTransformation) and
-              isinstance(insep_obj.original, InterpolatedChromaticObject)):
-            return insep_obj._get_interp_image(bandpass, None, integrator, {})
-
-        # Get the actual integrator object, and maybe adjust the bandpass if necessary.
-        wave_list, _, _ = utilities.combine_wave_list(insep_obj, bandpass)
-        integrator, bandpass = insep_obj._get_integrator(integrator, wave_list, bandpass)
-
-        # Evaluate the profiles at the wave values where the integrator will need them.
-        # We save them here in a dict, so we can use this in the integrator, but also
-        # get the stepk/maxk values to set the image size and scale appropriately.
-        profile_dict = {wave: insep_obj.evaluateAtWavelength(wave)
-                        for wave in integrator.calculateWaves(bandpass)}
-        profiles = profile_dict.values()
-
-        # Determine stepk, maxk the normal way we do this for sums so we can force
-        # them when making the InterpolatedImage. In addition to the efficiency benefit of
-        # saving the calls to calculateStepK and calculateMaxK, this is required if the
-        # insep_obj has zero flux, since those cannot calculate either value from the image.
-        prof0 = min(profiles, key=lambda prof: prof.stepk) # We use prof0 again below.
-        stepk = prof0.stepk
-        maxk = max(prof.maxk for prof in profiles)
-        iiscale = math.pi / maxk
-        iiscale /= 2  # This seems to be required to make test_monochromatic_sed to pass.
-                      # Not sure why, since I thought straight nyquist should be good enough.
-                      # But if it's needed there, it's probably worth always doing, rather than
-                      # having that test use iimult=2.  And definitions of Nyquist are somewhat
-                      # confusing, so it's possible that we should expect to need a factor of
-                      # 2 smaller than nyquist for the pixel scale.  :-S
-        if iimult is not None:
-            iiscale /= iimult
-
-        # Set up the image using the one with the smallest stepk (needing the largest image).
-        image = prof0.drawImage(scale=iiscale, method='no_pixel', setup_only=True)
-
-        # The dict __getitem__ function acts like a function of wavelength returning profiles,
-        # which is what the integrator needs.
-        effective_prof_image = integrator(profile_dict.__getitem__, bandpass, image,
-                                          {'method': 'no_pixel'})
-
-        # Use the calculated stepk, maxk directly here.
-        return InterpolatedImage(effective_prof_image, gsparams=gsparams,
-                                 _force_stepk=stepk, _force_maxk=maxk)
 
     @staticmethod
     def resize_effective_prof_cache(maxsize):
@@ -3156,7 +3160,8 @@ class ChromaticConvolution(ChromaticObject):
 
 
 ChromaticConvolution._effective_prof_cache = utilities.LRU_Cache(
-    ChromaticConvolution._get_effective_prof, maxsize=10)
+    lambda obj, bandpass, iimult, integrator, gsparams: obj._get_effective_prof(
+        bandpass, iimult, integrator, gsparams), maxsize=10)
 
 
 class ChromaticDeconvolution(ChromaticObject):
