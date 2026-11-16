@@ -459,11 +459,6 @@ class GSObject:
     def _approxWavelength(self, wave):
         return wave, self
 
-    def _get_effective_prof(self, bandpass, iimult, integrator, gsparams, flux_ratio=None):
-        from .chromatic import ChromaticObject
-        return ChromaticObject(self)._get_effective_prof(
-            bandpass, iimult, integrator, gsparams, flux_ratio)
-
     # Make op+ of two GSObjects work to return an Add object
     # Note: we don't define __iadd__ and similar.  Let python handle this automatically
     # to make obj += obj2 be equivalent to obj = obj + obj2.
