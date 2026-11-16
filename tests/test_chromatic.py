@@ -1759,14 +1759,72 @@ def test_interpolated_ChromaticObject():
     waves = np.linspace(blue_limit, red_limit, n_interp)
     # Make a version that tests the ability of the routine to handle non-sorted / non-array input.
     tricky_waves = list(waves[::-1])
+    # A sparser set will highlight the difference between use_exact_sed=True vs False.
+    sparse_waves = np.linspace(blue_limit, red_limit, 5)
 
-    # Make a star.
+    # Make a star and the exact PSF
     star = galsim.Gaussian(fwhm=1.e-8) * bulge_SED
-
-    # First, compare images that are drawn with exact and interpolated ChromaticGaussian.
     exact_psf = ChromaticGaussian(sigma_0)
-    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
+
+    # First check the ability to recover a monochromatic profile at specific wavelengths.
+    # At the interpolation wavelengths, evaluateAtWavelength correctly recovers the original
+    # profile at that wavelength regardless of the choice of use_exact_sed.
+    interp_exact = exact_obj.interpolate(sparse_waves, oversample_fac=oversample_fac,
+                                         use_exact_sed=True)
+    interp_linear = exact_obj.interpolate(sparse_waves, oversample_fac=oversample_fac,
+                                          use_exact_sed=False)
+    for wave in sparse_waves:
+        reference = exact_obj.evaluateAtWavelength(wave).drawImage(
+            nx=40, ny=40, scale=scale, dtype=float)
+        for obj in [interp_exact, interp_linear]:
+            mono = obj.evaluateAtWavelength(wave)
+            np.testing.assert_allclose(mono.flux, bulge_SED(wave), atol=0., rtol=2.e-7)
+            image = mono.drawImage(image=reference.copy())
+            np.testing.assert_allclose(image.array, reference.array, atol=1.e-5, rtol=0.)
+
+    # At waves in between the stored wavelengths, use_exact_sed=True preserves the SED's flux,
+    # but the shape is still interpolated, so the image test requires a slightly looser tolerance.
+    # With use_exact_sed=False, the flux is also interpolated and differs from the true SED.
+    for wave in waves:
+        if wave in sparse_waves: continue
+        reference = exact_obj.evaluateAtWavelength(wave).drawImage(
+            nx=40, ny=40, scale=scale, dtype=float)
+        ref_flux = bulge_SED(wave)
+
+        # The use_exact_sed=True case:
+        # This needs a little looser tolerance for the image.
+        mono_exact = interp_exact.evaluateAtWavelength(wave)
+        np.testing.assert_allclose(mono_exact.flux, ref_flux, atol=0., rtol=2.e-7)
+        image_exact = mono_exact.drawImage(image=reference.copy())
+        np.testing.assert_allclose(image_exact.array, reference.array, atol=5.e-4, rtol=0.)
+
+        # The use_exact_sed=False case:
+        # This needs much looser tolerance for both the flux and the image.
+        # The flux is especially bad near sharp SED features, which get smoothed over by the
+        # piecewise linear interpolation.
+        mono_linear = interp_linear.evaluateAtWavelength(wave)
+        assert np.abs(mono_linear.flux - ref_flux) > 1.e-6 * ref_flux
+        np.testing.assert_allclose(mono_linear.flux, ref_flux, atol=0., rtol=0.3)
+        image_linear = mono_linear.drawImage(image=reference.copy())
+        np.testing.assert_allclose(image_linear.array, reference.array, atol=2.e-3, rtol=0.)
+
+        # The uncorrected flux follows linear interpolation between the stored SED values.
+        linear_flux = np.interp(wave, sparse_waves, bulge_SED(sparse_waves))
+        np.testing.assert_allclose(mono_linear.flux, linear_flux, atol=0., rtol=1.e-6)
+
+        # The SED correction changes only normalization: both options have the same shape.
+        np.testing.assert_allclose(image_exact.array, image_linear.array * ref_flux / linear_flux,
+                                   atol=1.e-8, rtol=0.)
+
+    # Both options reject evaluation outside the stored wavelength range.
+    for obj in [interp_exact, interp_linear]:
+        assert_raises(galsim.GalSimRangeError, obj.evaluateAtWavelength, blue_limit - 1.)
+        assert_raises(galsim.GalSimRangeError, obj.evaluateAtWavelength, red_limit + 1.)
+
+    # Now compare images that are drawn with exact and interpolated ChromaticGaussian.
+    # From here, we'll use the denser waves for increased precision.
+    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
     interp_obj = galsim.Convolve(star, interp_psf)
     im_exact = exact_obj.drawImage(bandpass, scale=scale, nx=40, ny=40)
     im_interp = im_exact.copy()
