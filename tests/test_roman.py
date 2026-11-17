@@ -693,8 +693,8 @@ def test_roman_psfs(run_slow):
                                    extra_aberrations=np.zeros(23)+0.001)
     # Check that we get the same answer if we specify the center of the focal plane.
     psf_5_tmp = galsim.roman.getPSF(SCA=5, bandpass='F184', wavelength=1950., pupil_bin=8,
-                                    SCA_pos=galsim.PositionD(galsim.roman.n_pix/2,
-                                                             galsim.roman.n_pix/2))
+                                    SCA_pos=galsim.PositionD((galsim.roman.n_pix+1)/2,
+                                                             (galsim.roman.n_pix+1)/2))
     assert psf_5==psf_5_tmp
 
     # Check that if we specify a particular wavelength, the PSF that is drawn is the same as if we
@@ -961,7 +961,7 @@ def test_roman_psf_wcs():
     # In a more realistic geometry, the WCS projection point is the SCA center, off-axis
     # from the boresight. The rotation needs to be with respect to local north at the source
     # position rather than at the boresight.
-    sca_center = galsim.PositionD(galsim.roman.n_pix/2, galsim.roman.n_pix/2)
+    sca_center = galsim.PositionD((galsim.roman.n_pix+1)/2, (galsim.roman.n_pix+1)/2)
     sky_center = galsim.CelestialCoord(123*galsim.degrees, -35.7*galsim.degrees)
     affine = galsim.AffineTransform(0.11, 0, 0, 0.11, origin=sca_center)
     wcs = galsim.TanWCS(affine, sky_center)
@@ -1380,12 +1380,9 @@ def test_aberration_interpolation(run_slow):
 
 @timer
 def test_roman_focal_plane(run_slow):
-    """Test that a full focal plane has everything oriented as shown in mapping_v210503.pdf
-    """
-    # For this test, we mostly try to plot points on each SCA that visually reproduce
-    # the appearance of the red and blue arrows on Chris's plot of the focal plane.
-    # We'll put in some asserts, but the real test is to open the produced figure and
-    # compare the two diagrams visually.
+    """Test that every detector uses the common science-frame axis orientation on the sky."""
+    # The science axes have the same orientation on every SCA, unlike the older
+    # hardware-frame axes illustrated in mapping_v210503.pdf.
 
     # Boresight at 0,0, so RA, Dec are essentially observatory coordinates.
     world_pos = galsim.CelestialCoord(0.*galsim.degrees, 0*galsim.degrees)
@@ -1562,23 +1559,15 @@ def test_roman_focal_plane(run_slow):
         file_name = os.path.join('output', 'test_roman_focal_plane.pdf')
         canvas.print_figure(file_name, dpi=300)
         print('Made ',file_name)
-        print('Compare this to ../devel/roman/mapping_v210503.pdf.')
+        print('The arrows use science coordinates on every SCA.')
 
-    # The real test is that the images look similar.  But turn this into some
-    # assert statements.
+    # The orientations are now simple compared to the old pattern where some SCAs were flipped
+    # relative to the others.
     for sca in range(1,19):
-        if sca%3 == 0:
-            # 3,6,9,... have blue moving NE and red moving NW
-            assert blue_arrows[sca][-1][0] > blue_arrows[sca][0][0]  # RA increases
-            assert blue_arrows[sca][-1][1] > blue_arrows[sca][0][1]  # Dec increases
-            assert red_arrows[sca][-1][0] < red_arrows[sca][0][0]    # RA decreases
-            assert red_arrows[sca][-1][1] > red_arrows[sca][0][1]    # Dec increases
-        else:
-            # others have blue moving SW and red moving SE
-            assert blue_arrows[sca][-1][0] < blue_arrows[sca][0][0]  # RA decreases
-            assert blue_arrows[sca][-1][1] < blue_arrows[sca][0][1]  # Dec decreases
-            assert red_arrows[sca][-1][0] > red_arrows[sca][0][0]    # RA increases
-            assert red_arrows[sca][-1][1] < red_arrows[sca][0][1]    # Dec decreases
+        assert blue_arrows[sca][-1][0] < blue_arrows[sca][0][0]
+        assert blue_arrows[sca][-1][1] < blue_arrows[sca][0][1]
+        assert red_arrows[sca][-1][0] < red_arrows[sca][0][0]
+        assert red_arrows[sca][-1][1] > red_arrows[sca][0][1]
 
 
 if __name__ == "__main__":
