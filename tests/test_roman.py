@@ -749,8 +749,9 @@ def test_roman_psfs(run_slow):
 
     # Make sure the interpolated version isn't gratuitously copying the aperture.  It should be
     # able to use the same aperture object for each wavelength.
-    for obj in psf_int.objs[1:]:
-        assert obj._aper is psf_int.objs[0]._aper
+    interpolated_psf = psf_int.original
+    for obj in interpolated_psf.objs[1:]:
+        assert obj._aper is interpolated_psf.objs[0]._aper
 
     # Check some invalid inputs.
     with assert_raises(TypeError):
