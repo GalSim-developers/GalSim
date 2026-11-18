@@ -45,6 +45,13 @@ jobs:
                       CXX: clang++
                       FFTW_DIR: "/usr/local/lib/"
 
+                    # and a Linux ARM64 system
+                    - os: ubuntu-26.04-arm
+                      py: "3.14"
+                      CC: gcc
+                      CXX: g++
+                      FFTW_DIR: "/usr/local/lib"
+
                     # And a pypy system.
                     # As of 12/1/2022, this is broken for astropy.
                     # pypy3 used to work, but that's Py 3.6, and GHA no longer supports it.
@@ -98,7 +105,7 @@ jobs:
                     ${{ runner.os }}-
 
             - name: Install fftw, etc. on linux
-              if: matrix.os == 'ubuntu-latest'
+              if: runner.os == 'Linux'
               run: |
                 echo ${{ matrix.os }}
                 sudo -H apt update -y
@@ -113,7 +120,7 @@ jobs:
                 sudo -H apt install -y ffmpeg
 
             - name: Install fftw, etc. on MacOS
-              if: matrix.os == 'macos-latest'
+              if: runner.os == 'macOS'
               # brew sometimes exits with 1 if things are already installed.
               # continue-on-error should mean that this still counds as success for this step.
               # but it doesn't seem to work right.  Still counts as an error, it just moves

@@ -24,6 +24,7 @@ jobs:
       matrix:
         runs-on:
           - ubuntu-latest
+          - ubuntu-26.04-arm
           - macos-14
         clib:
           - glib
