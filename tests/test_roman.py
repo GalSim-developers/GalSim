@@ -1025,19 +1025,22 @@ def test_config_psf():
     config['psf']['n_waves'] = 4
     config['psf']['extra_aberrations'] = [0.01, 0, 0, 0.03, -0.05]
     config['psf']['gsparams'] = {'folding_threshold' : 1.e-2}
+    config['psf']['interpolant'] = 'lanczos5'
     psf1 = galsim.config.BuildGSObject(config, 'psf')[0]
     psf2 = galsim.roman.getPSF(SCA=4, bandpass='H158', pupil_bin=8, n_waves=4,
                                extra_aberrations=[0,0,0,0, 0.01, 0, 0, 0.03, -0.05],
-                               gsparams=galsim.GSParams(folding_threshold=1.e-2))
+                               gsparams=galsim.GSParams(folding_threshold=1.e-2),
+                               interpolant='lanczos5')
     print('psf1 = ',str(psf1))
     print('psf2 = ',str(psf2))
     assert psf1 == psf2
 
-    # Check using some values that are may already loaded into base config dict.
+    # Check using some values that are already loaded into base config dict.
     config = galsim.config.CleanConfig(config)
     del config['psf']['SCA']
     del config['psf']['bandpass']
     del config['psf']['n_waves']
+    del config['psf']['interpolant']
     config['bandpass'] = galsim.roman.getBandpasses(AB_zeropoint=True)['Z087']
     config['SCA'] = 9
     config['image_pos'] = galsim.PositionD(123,456)

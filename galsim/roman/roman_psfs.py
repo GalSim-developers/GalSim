@@ -61,7 +61,7 @@ def getPSF(SCA, bandpass,
            n_waves=None, extra_aberrations=None,
            wavelength=None, gsparams=None,
            logger=None, high_accuracy=None, approximate_struts=None,
-           boresight=None, telescope_PA=None):
+           boresight=None, telescope_PA=None, interpolant='lanczos15'):
     """Get a single PSF for Roman ST observations.
 
     The user must provide the SCA and bandpass; the latter is used when setting up the pupil
@@ -206,6 +206,8 @@ def getPSF(SCA, bandpass,
         boresight:          Telescope boresight as a `CelestialCoord`. [default: None]
         telescope_PA:       Position angle of the telescope V3 axis at ``boresight``, measured
                             from celestial north toward east, as a `galsim.Angle`. [default: None]
+        interpolant:        Interpolant instance or string to pass to `OpticalPSF`.
+                            [default: 'lanczos15']
 
     Returns:
         A single PSF object (either a ChromaticOpticalPSF or an OpticalPSF depending on the
@@ -287,7 +289,7 @@ def getPSF(SCA, bandpass,
     # Now call _get_single_PSF().
     psf = _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                           n_waves, extra_aberrations, wavelength,
-                          pupil_plane_type, gsparams)
+                          pupil_plane_type, gsparams, interpolant)
 
     if boresight is not None:
         # The boresight direction is what Roman defines as the V1 axis.
@@ -360,7 +362,7 @@ _make_aperture = LRU_Cache(__make_aperture)
 
 def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                     n_waves, extra_aberrations, wavelength,
-                    pupil_plane_type, gsparams):
+                    pupil_plane_type, gsparams, interpolant):
     """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
     """
@@ -390,7 +392,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     if wavelength is None:
         PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
                                   diam=diameter, aberrations=use_aberrations,
-                                  aper=aper, gsparams=gsparams)
+                                  aper=aper, gsparams=gsparams, interpolant=interpolant)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
             bp = getBandpass(bandpass)
@@ -400,7 +402,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
         tmp_aberrations = use_aberrations * zemax_wavelength / wavelength
         PSF = OpticalPSF(lam=wavelength, diam=diameter,
                          aberrations=tmp_aberrations,
-                         aper=aper, gsparams=gsparams)
+                         aper=aper, gsparams=gsparams, interpolant=interpolant)
 
     # The project's pupil plane mask and aberrations are all defined in terms of the entrance
     # pupil. We need to rotate this by 180 degrees into the exit pupil coordinates, which
