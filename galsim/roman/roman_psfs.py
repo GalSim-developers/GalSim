@@ -67,8 +67,8 @@ def getPSF(SCA, bandpass,
     The user must provide the SCA and bandpass; the latter is used when setting up the pupil
     plane configuration and when interpolating chromatic information, if requested.
 
-    This routine carries out linear interpolation of the aberrations within a given SCA, based on
-    the Roman Cycle 9 specification of the aberrations as a function of focal plane
+    This routine carries out quadratic interpolation of the aberrations within a given SCA, based
+    on the Roman Cycle 9 specification of the aberrations as a function of focal plane
     position, more specifically from the WebbPSF data files from webbpsf-data-1.2.1.tar.gz
     downloaded from https://webbpsf.readthedocs.io/en/latest/installation.html#data-install.
     The abberation file is webbpsf-data/WFI/wim_zernikes_cycle9.csv.
@@ -378,8 +378,8 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
 
     # Start reading in the aberrations for that SCA
     aberrations, x_pos, y_pos = _read_aberrations(SCA)
-    # Do bilinear interpolation, unless we're exactly at the center (default).
-    use_aberrations = _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos)
+    # Interpolate using the center and four corner values.
+    use_aberrations = _interp_aberrations(aberrations, x_pos, y_pos, SCA_pos)
 
     if extra_aberrations is not None:
         use_aberrations[:len(extra_aberrations)] += extra_aberrations
@@ -430,9 +430,8 @@ def _read_aberrations(SCA):
 
     # Read in data.
     dat = np.loadtxt(infile)
-    # It actually has 5 field positions, not just 1, to allow us to make position-dependent PSFs
-    # within an SCA eventually.  Put it in the required format: an array of length (5 field
-    # positions, 23 Zernikes), with the first entry empty (Zernike polynomials are 1-indexed so we
+    # Put it in the required format: an array of shape (5 field positions, 23 Zernikes),
+    # with the first entry in each column empty (Zernike polynomials are 1-indexed so we
     # use entries 1-22).  The units are waves.
     aberrations = np.zeros((5,23))
     aberrations[:,1:] = dat[:,5:]
@@ -449,42 +448,30 @@ def _read_aberrations(SCA):
 
     return aberrations, x, y
 
-def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
-    """
-    This is a helper routine to do bilinear interpolation of aberrations defined at 4 field
-    positions: the four corners.  Note that we also have aberrations at the center position,
-    but these are generally quite close (within a few percent) of what would come from this bilinear
-    interpolation.  So for simplicity, we just do the bilinear interpolation.
-    """
-    # The data comprise 5 rows: center, lower-left, upper-left, upper-right, lower-right.
-    # The x,y values at the corners aren't precisely identical, but despite that, just
-    # take the outer one and do a simple bilinear interpolation as though it were a rectangle.
+def _interp_aberrations(aberrations, x_pos, y_pos, SCA_pos):
+    """Fit five samples quadratically through Z11 and with bilinear least squares above Z11.
 
-    # First, figure out which point is which corner. (0 is always the center.)
-    for i in range(1,5):
-        if x_pos[i] < x_pos[0] and y_pos[i] < y_pos[0]:
-            ll = i # lower-left
-        if x_pos[i] < x_pos[0] and y_pos[i] > y_pos[0]:
-            ul = i # upper-left
-        if x_pos[i] > x_pos[0] and y_pos[i] < y_pos[0]:
-            lr = i # lower-right
-        if x_pos[i] > x_pos[0] and y_pos[i] > y_pos[0]:
-            ur = i # upper-right
-    assert x_pos[ll] < x_pos[0] and y_pos[ll] < y_pos[0]
-    assert x_pos[ul] < x_pos[0] and y_pos[ul] > y_pos[0]
-    assert x_pos[lr] > x_pos[0] and y_pos[lr] < y_pos[0]
-    assert x_pos[ur] > x_pos[0] and y_pos[ur] > y_pos[0]
-    min_x = np.min(x_pos)
-    min_y = np.min(y_pos)
-    max_x = np.max(x_pos)
-    max_y = np.max(y_pos)
-    x_frac = (SCA_pos.x - min_x) / (max_x - min_x)
-    y_frac = (SCA_pos.y - min_y) / (max_y - min_y)
-    ll_ab = aberrations[ll, :]
-    ul_ab = aberrations[ul, :]
-    lr_ab = aberrations[lr, :]
-    ur_ab = aberrations[ur, :]
-    interp_ab = (1.0-x_frac)*(1.0-y_frac)*ll_ab + (1.0-x_frac)*y_frac*ul_ab + \
-        x_frac*(1.0-y_frac)*lr_ab + x_frac*y_frac*ur_ab
+    The input data for Z12+ seem to be significantly noisier than Z4-11, so rather than let
+    the fit be fully quadratic through the 5 points (4 corners + center), we instead limit the
+    interpolation to bilinear and use the 5 points to get a least-squares fit.
+    """
+    # Shift to the requested position and scale both coordinates by the field extent.
+    # This preserves the polynomial space while keeping the solve well conditioned.
+    scale = max(np.ptp(x_pos), np.ptp(y_pos))
+    x = (x_pos-SCA_pos.x)/scale
+    y = (y_pos-SCA_pos.y)/scale
+    basis = np.array([np.ones(5), x, y, x*y, x*x+y*y])
 
-    return interp_ab.flatten()
+    # For Z4-11, do the full fit.
+    # Each column is the basis at one sample. At the requested position, x=y=0,
+    # so solve for weights whose basis values are [1, 0, 0, 0, 0].
+    weights = np.linalg.solve(basis, [1., 0., 0., 0., 0.])
+    low_coeff = weights @ aberrations[:,:12]
+
+    # For Z12+, do a least squares fit.
+    # Omit the final row of the basis matrix.
+    # The value at x=y=0 is the constant coefficient of the fit, so take the first
+    # row of the returned solution.
+    high_coeff = np.linalg.lstsq(basis[:4].T, aberrations[:,12:], rcond=None)[0][0]
+
+    return np.concatenate((low_coeff, high_coeff))
