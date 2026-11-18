@@ -345,12 +345,9 @@ def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
 
     pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
 
-    #The project provides pupils in the exit frame orientation. To switch to WFI coords, we need to flip following:
-    #https://github.com/Roman-HLIS-Cosmology-PIT/PSFSim/blob/main/docs/coordinates.rst, which has the chirality
-    #looking in the telescope. Can be accomplished by flipping the vertical axis.  
-           
-    pupil_plane_im = pupil_plane_im.flip_ud()
-
+    # This aperture is in terms of the entrance pupil orientation, which is also the frame
+    # the project uses to define the aberrations. We'll keep everything in this orientation
+    # and then rotate to the exit pupil coordinates at the end of _get_single_PSF.
     aper = Aperture(lam=wave, diam=diameter,
                     obscuration=obscuration,
                     pupil_plane_im=pupil_plane_im,
@@ -405,13 +402,18 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                          aberrations=tmp_aberrations,
                          aper=aper, gsparams=gsparams)
 
-    return PSF
+    # The project's pupil plane mask and aberrations are all defined in terms of the entrance
+    # pupil. We need to rotate this by 180 degrees into the exit pupil coordinates, which
+    # matches the detector frame.
+    # cf. https://stpsf.readthedocs.io/en/stable/STPSF_Roman_Pupil_Orientation.html
+    # Fourier propagation commutes with this rotation, so transform the completed PSF.
+    return PSF.transform(-1, 0, 0, -1)
 
 def _read_aberrations(SCA):
     """
     This is a helper routine that reads in aberrations for a particular SCA and wavelength (given as
     galsim.roman.roman_psfs.zemax_wavelength) from stored files, and returns them along with the
-    field positions.
+    field positions. The returned coefficients use the entrance pupil frame.
 
     Parameters:
         SCA:        The identifier for the SCA, from 1-18.
