@@ -1242,15 +1242,10 @@ def test_config_sca():
 @timer
 def test_aberration_interpolation(run_slow):
     """Test the Roman aberration interpolation method inside roman.roman_psfs
-    """
-    # We read in pairs of conjunction points, they are on different SCAs but are physically
-    # adjacent on the FPA. The optical aberration between the two points in a pair should
-    # be much less than the aberration range in the FPA. The maximum and minimum of aberration
-    # in the FPA is pre-calculated using an 20x20 grid of positions on each SCA by Tianqing
-    # Zhang. The conjunction pairs between the first row and the second row are considered
-    # 'far', because are further separated. For 'far' pairs, z_diff<= 0.1*(z_max - z_min),
-    # elsewhere, z_diff<= 0.05*(z_max - z_min).
 
+    We compare nearby positions on different SCAs with the coefficient ranges across
+    the tabulated Cycle 9 data. Higher-order terms allow more fractional variation.
+    """
     print("Start continuity test for aberration interpolation")
 
     # Make an arbitrary WCS.  We don't care about the sky positions, but we'll check
@@ -1298,6 +1293,16 @@ def test_aberration_interpolation(run_slow):
     #Read the aberration and sca_pos for the interpolation *reference* points from the roman files.
     abers = { isca: galsim.roman.roman_psfs._read_aberrations(isca) for isca in range(1,19) }
 
+    # First check the positions on the SCA that were used for the fit. For Z4-11, these
+    # 5 points should be recovered exactly. For Z12+, they are approximate, since we do a
+    # least-squares fit to the points.
+    for aberrations, x_positions, y_positions in abers.values():
+        for row, x, y in zip(aberrations, x_positions, y_positions):
+            actual = galsim.roman.roman_psfs._interp_aberrations(
+                aberrations, x_positions, y_positions, galsim.PositionD(x, y))
+            np.testing.assert_allclose(actual[:12], row[:12], rtol=0, atol=1.e-12)
+            np.testing.assert_allclose(actual[12:], row[12:], rtol=0, atol=0.002)
+
     # Calculate the min/max zernike values across the FPA.
     aberration_array = np.concatenate([a[0] for a in abers.values()])
     print('all aberrations = ',aberration_array)
@@ -1330,7 +1335,7 @@ def test_aberration_interpolation(run_slow):
             for sca in range(1,19):
                 x,y = np.meshgrid(np.arange(0,4096,500), np.arange(0,4096,500))
                 for xx,yy in zip(x.ravel(),y.ravel()):
-                    ab = galsim.roman.roman_psfs._interp_aberrations_bilinear(
+                    ab = galsim.roman.roman_psfs._interp_aberrations(
                         abers[sca][0], abers[sca][1], abers[sca][2],
                         SCA_pos=galsim.PositionD(xx,yy))
                     coord = wcs[sca].toWorld(galsim.PositionD(xx,yy))
@@ -1347,30 +1352,28 @@ def test_aberration_interpolation(run_slow):
         print(sca1, x1, y1, sca2, x2, y2, far)
 
         #For each pair of conjunction points, calculate their aberration by calling
-        # _interp_aberrations_bilinear
-        point_1_abe = galsim.roman.roman_psfs._interp_aberrations_bilinear(
+        # _interp_aberrations
+        point_1_abe = galsim.roman.roman_psfs._interp_aberrations(
             abers[sca1][0], abers[sca1][1], abers[sca1][2],
             SCA_pos=galsim.PositionD(x1,y1))
-        point_2_abe = galsim.roman.roman_psfs._interp_aberrations_bilinear(
+        point_2_abe = galsim.roman.roman_psfs._interp_aberrations(
             abers[sca2][0], abers[sca2][1], abers[sca2][2],
             SCA_pos=galsim.PositionD(x2,y2))
 
-        for i in range(1,23):
+        # Skip Z1, which is arbitrary and doesn't impact the PSF.
+        # (Honestly, it's a bit weird that it is even included in the aberration file.)
+        for i in range(2,23):
             z_diff = np.abs(point_2_abe[i] - point_1_abe[i])
             print('  ',i,z_diff,point_1_abe[i],point_2_abe[i],Z_range[i],far,z_diff/Z_range[i])
 
-            # We used to have different tolerances for far vs near separations, but now
-            # the main thing is that different zernike coefficients are differently smooth.
-            # 2-10 are all very smooth and most pass with frac=0.10.
-            # 1 is worse, but 1 is weird that it is even in the data.
-            # 11-14 are also a little choppy.
-            # 15+ all look really bad in the plots (made above when run from main).
-            # I think our code is ok here, but the data seem to be very noisy for the
-            # higher order Zernikes.
-            if i < 2:
-                frac = 0.25
-            elif i < 11:
+            if i < 11:
                 frac = 0.15
+            elif i == 11:
+                # Z11 is somewhat noisier, but still seems to have real quadratic behavior
+                # within the SCA bounds, so we chose to do the quadratic fit for it, but the
+                # extrapolation off the edge of the SCAs ends up with a bit more error than
+                # the bilinear fit would have.
+                frac = 0.30
             elif i < 15:
                 frac = 0.25
             else:
