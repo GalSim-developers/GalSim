@@ -206,7 +206,7 @@ jobs:
             - name: Check shared library
               if: matrix.py == 3.12
               run: |
-                python -m pip install setuptools
+                python -m pip install "numpy>=1.17" "pybind11>=2.2" "setuptools>=38"
                 
                 # On a few systems (arbitrarily py3.12, where we also check mac and clang),
                 # check the shared library creation and link.
