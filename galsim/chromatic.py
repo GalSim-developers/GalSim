@@ -3507,6 +3507,8 @@ class ChromaticOpticalPSF(ChromaticObject):
                         optics approximation where the photon angles are derived from the
                         phase screen gradient.  If False, then first draw using Fourier
                         optics and then shoot from the derived InterpolatedImage. [default: False]
+        interpolant:    Interpolant instance or string specifying the real-space reconstruction
+                        of the sampled PSF image, as for `OpticalPSF`. [default: None]
         **kwargs:       Any other keyword arguments to be passed to OpticalPSF, for example,
                         related to struts, obscuration, oversampling, etc.  See OpticalPSF
                         docstring for a complete list of options.
@@ -3516,7 +3518,7 @@ class ChromaticOpticalPSF(ChromaticObject):
     _single_params = [ {'diam' : float, 'lam_over_diam' : float} ]
 
     def __init__(self, lam, diam=None, lam_over_diam=None, aberrations=None,
-                 scale_unit=None, gsparams=None, **kwargs):
+                 scale_unit=None, gsparams=None, interpolant=None, **kwargs):
         # First, take the basic info.
         if scale_unit is None:
             scale_unit = arcsec
@@ -3558,6 +3560,7 @@ class ChromaticOpticalPSF(ChromaticObject):
             raise GalSimValueError("Invalid fft_sign", self.fft_sign, allowed_values=['+','-'])
 
         self.geometric_shooting = kwargs.pop('geometric_shooting', False)
+        self.interpolant = interpolant
 
         # All kwargs left should be relevant for the Aperture.
         # If the pupil plane image is given, then we can make the aperture now to use at all
@@ -3613,13 +3616,14 @@ class ChromaticOpticalPSF(ChromaticObject):
                  self.gsparams == other.gsparams and
                  self.fft_sign == other.fft_sign and
                  self.geometric_shooting == other.geometric_shooting and
+                 self.interpolant == other.interpolant and
                  self._aper == other._aper and
                  self._kwargs == other._kwargs))
 
     def __hash__(self):
         return hash(("galsim.ChromaticOpticalPSF", self.lam, self.lam_over_diam,
                      tuple(self.aberrations), self.scale_unit, self.gsparams,
-                     self.fft_sign, self.geometric_shooting, self._aper,
+                     self.fft_sign, self.geometric_shooting, self.interpolant, self._aper,
                      frozenset(self._kwargs.items())))
 
     def __repr__(self):
@@ -3631,6 +3635,8 @@ class ChromaticOpticalPSF(ChromaticObject):
             s += ', fft_sign="-"'
         if self.geometric_shooting:
             s += ', geometric_shooting=True'
+        if self.interpolant is not None:
+            s += ', interpolant=%r'%self.interpolant
         if self._aper is not None:
             s += ', aper=%r'%self._aper
         else:
@@ -3678,12 +3684,12 @@ class ChromaticOpticalPSF(ChromaticObject):
                     lam=wave, diam=self.diam,
                     aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
                     _force_stepk=self._stepk*wave_factor, _force_maxk=self._maxk*wave_factor,
-                    gsparams=self.gsparams, aper=aper)
+                    gsparams=self.gsparams, aper=aper, interpolant=self.interpolant)
         else:
             ret = OpticalPSF(
                     lam=wave, diam=self.diam,
                     aberrations=self.aberrations*wave_factor, scale_unit=self.scale_unit,
-                    gsparams=self.gsparams, aper=aper)
+                    gsparams=self.gsparams, aper=aper, interpolant=self.interpolant)
             self._stepk = ret.stepk / wave_factor
             self._maxk = ret.maxk / wave_factor
             return ret
