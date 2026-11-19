@@ -518,9 +518,15 @@ def test_exceptions():
     with assert_raises(galsim.GalSimValueError):
         galsim.InterpolatedImage(image=galsim.ImageI(5, 5, scale=1))
 
-    # Image must have non-zero flux
+    # Image must have non-zero flux if not providing stepk, maxk.
     with assert_raises(galsim.GalSimValueError):
         galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=0.))
+
+    # It's fine if we don't ask InterpolatedImage to figure out stepk, maxk though.
+    galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=0.),
+                             calculate_stepk=False, calculate_maxk=False)
+    galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=0.),
+                             _force_stepk=0.05, _force_maxk=10)
 
     # Can't shoot II with SincInterpolant
     ii = galsim.InterpolatedImage(image=galsim.ImageF(5, 5, scale=1, init_value=1.),
