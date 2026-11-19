@@ -2147,6 +2147,7 @@ def test_ChromaticOpticalPSF(run_slow):
     psf2 = galsim.ChromaticOpticalPSF(lam=lam, diam=diam,
                                       astig1=0.2, astig2=-0.1, coma1=0.03, coma2=0.04,
                                       fft_sign='-', geometric_shooting=True,
+                                      interpolant='lanczos15',
                                       pupil_plane_im=pupil_plane_im)
     check_pickle(psf2)
 
