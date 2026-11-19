@@ -396,7 +396,7 @@ def _calculate_minmax_pix(include_border=False):
         # We figure out the borders based on the FPA coordinates, but when we apply the
         # adjustments to min/max x/y, we use science coordinates where +x is FPA -x.
         #
-        # Positive side of 1/2/3, same as negative side of 10/11/12
+        # Negative side of 1/2/3, same as positive side of 10/11/12
         border_mm = (sca_xc_mm[10]-sca_xc_mm[1])-n_pix*pixel_size_mm
         # assert statement help ensure that these pairings continue to work if positions
         # are updated in the future.
@@ -405,15 +405,14 @@ def _calculate_minmax_pix(include_border=False):
         max_x_pix[ [10,11,12] ] += half_border_pix
         min_x_pix[ [1,2,3] ] -= half_border_pix
 
-        # Negative side of 1/2/3 and 13/14/15, same as positive side of 4/5/6 and 10/11/12
+        # Positive side of 1/2/3 and 13/14/15, same as negative side of 4/5/6 and 10/11/12 in science coordinate
         border_mm = (sca_xc_mm[1]-sca_xc_mm[4])-n_pix*pixel_size_mm
         assert 0 < border_mm < 5
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
         min_x_pix[ [4,5,6,10,11,12] ] -= half_border_pix
         max_x_pix[ [1,2,3,13,14,15] ] += half_border_pix
 
-        # Negative side of 4/5/6 and 16/17/18, same as positive side of 7/8/9 and 13/14/15
-        # Also add this same chip gap to the outside chips.  Neg side of 7/8/9, pos 16/17/18.
+        # Positive side of 4/5/6 and 16/17/18, same as negative side of 7/8/9 and 13/14/15
         border_mm = (sca_xc_mm[4]-sca_xc_mm[7])-n_pix*pixel_size_mm
         assert 0 < border_mm < 5
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
