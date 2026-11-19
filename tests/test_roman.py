@@ -1062,6 +1062,17 @@ def test_roman_psf_wcs():
     im_scale2 = scale_psf.drawImage(scale=galsim.roman.pixel_scale, center=image_pos)
     np.testing.assert_allclose(im_scale2.array, im_scale.array, atol=1.e-8)
 
+    # Reversing the WCS x-axis reflects the sky PSF. Drawing at positive pixel scale
+    # preserves that reflection, so compare with a flipped reference image directly.
+    reflected_wcs = galsim.JacobianWCS(-0.11, 0, 0, 0.11)
+    reflected_psf = galsim.roman.getPSF(5, 'F184', wavelength=1950., pupil_bin=8,
+                                        SCA_pos=image_pos, wcs=reflected_wcs)
+    reference = psf.drawImage(nx=65, ny=65, scale=galsim.roman.pixel_scale)
+    reflected_image = reflected_psf.drawImage(bounds=reference.bounds,
+                                              scale=galsim.roman.pixel_scale)
+    np.testing.assert_allclose(reflected_image.array, reference.flip_lr().array,
+                               rtol=0, atol=1.e-8)
+
     # Supplying boresight and telescope_PA provides a means to specify the telescope's
     # orientation directly. At the boresight, the rotation is telescope_PA - 60 degrees.
     # This is artificial: Roman's camera is off-axis, so the boresight cannot actually be
