@@ -1585,11 +1585,13 @@ def test_ii_shoot(run_slow):
     """Test InterpolatedImage with photon shooting.  Particularly the flux of the final image.
     """
     rng = galsim.BaseDeviate(1234)
+    # Include a couple negative pixels to check the handling of positive and negative pixels
+    # in the shoot function.
     ref_array = np.array([
-        [0.01, 0.08, 0.07, 0.02],
-        [0.13, 0.38, 0.52, 0.06],
-        [0.09, 0.41, 0.44, 0.09],
-        [0.04, 0.11, 0.10, 0.01] ])
+        [-0.01, 0.08, 0.07, -0.02],
+        [ 0.13, 0.38, 0.52,  0.06],
+        [ 0.09, 0.41, 0.44,  0.09],
+        [ 0.04, 0.11, 0.10,  0.01] ])
     image_in = galsim.Image(ref_array)
     interp_list = ['nearest', 'delta', 'linear', 'cubic', 'quintic',
                    'lanczos3', 'lanczos5', 'lanczos7']
@@ -1619,6 +1621,22 @@ def test_ii_shoot(run_slow):
             rtol = 1.e-7
         assert np.isclose(added_flux, obj.flux, rtol=rtol)
         assert np.isclose(im.array.sum(), obj.flux, rtol=rtol)
+
+        # Because there are negative pixels, even when the interpolant is all positive, we
+        # always get some negative-flux photons here.
+        assert np.any(photons.flux < 0)
+
+        # The photon fluxes are not just +-1. The sum needs to be flux, but we also need the
+        # shot noise variance to be flux for Poisson statistics. The upshot is that with the
+        # negative flux photons, you need more than flux of them and their individual abs
+        # fluxes will be less than 1. Significantly so for the highly oscillatory interp
+        # kernels such as quintic and lanczos.
+        assert len(photons) > flux
+        expected_weight = (obj.positive_flux + obj.negative_flux) / len(photons)
+        assert expected_weight < 1.
+        np.testing.assert_allclose(np.abs(photons.flux), expected_weight)
+
+        # Drawing into an image and returning the photons directly must use the same weights.
         photons2 = obj.makePhot(poisson_flux=False, rng=rng.duplicate())
         assert photons2 == photons, "InterpolatedImage makePhot not equivalent to drawPhot"
 

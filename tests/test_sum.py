@@ -98,6 +98,13 @@ def test_add():
             myImg.array, savedImg.array, 5,
             err_msg="Using GSObject sum += 0.25 * gauss2 disagrees with expected result")
 
+    # An interesting limit is the case of shooting a single photon. Then the photon can only
+    # be assigned to one component or the other (with the appropriate probability). It needs
+    # to end up with the full flux of the object, not a fraction of the flux.
+    for seed in range(1, 11):
+        photons = sum_gauss.shoot(1, galsim.BaseDeviate(seed))
+        np.testing.assert_allclose(photons.flux, sum_gauss.flux)
+
     check_basic(sum_gauss, "sum of 2 Gaussians")
 
     # Test photon shooting.
@@ -135,6 +142,49 @@ def test_add():
     assert_raises(TypeError, galsim.Sum, [gauss1, myImg])
     assert_raises(TypeError, galsim.Sum, [gauss1, gauss1, myImg])
     assert_raises(TypeError, galsim.Sum, [gauss1, gauss1], real_space=False)
+
+
+@timer
+def test_shoot_signed_flux():
+    """Test photon shooting a Sum when some components include negative flux photons."""
+    # This test is in response to Issue #1352, reported by Axel Guinot.
+    # There had been an error that the flux normalization in Sum was setting every photon
+    # in a component to the fluxPerPhoton value. This was correct for most profiles, but not
+    # when a component shoots photons with negative flux. Primarily, this is anything with an
+    # InterpolatedImage (including the OpticalPSF that Axel was using).
+    # This is a simplified version of the script Axel posted in that issue.
+
+    # Make a Sum of the same profile twice, and then divide by 2. It should be equivalent
+    # to the component profile. Specifically, the expected total flux is 1.0. (Not exactly,
+    # because of the varying signs.)
+    rng = galsim.BaseDeviate(1234)
+    psf = galsim.OpticalPSF(lam_over_diam=0.1)
+    summed_psf = (psf + psf) / 2
+    n_photons = 100000
+    photons = summed_psf.shoot(n_photons, rng)
+    absolute_flux = summed_psf.positive_flux + summed_psf.negative_flux
+    assert np.any(photons.flux < 0)
+    np.testing.assert_allclose(np.abs(photons.flux), absolute_flux / n_photons)
+    np.testing.assert_allclose(photons.getTotalFlux(), 1., atol=0.02)
+
+    # Also check this using a photon operator.
+    star = galsim.DeltaFunction(flux=1000.)
+    photons = star.makePhot(n_photons=n_photons, poisson_flux=False,
+                            photon_ops=[summed_psf], rng=rng)
+    assert np.any(photons.flux < 0)
+    np.testing.assert_allclose(photons.getTotalFlux(), star.flux, rtol=0.02)
+
+    # A similar idea exposed a different bug in InterpolatedImage. Here we make two profiles,
+    # one with all the pixels multiplied by 2, and another with them multiplied by -1.
+    # The Sum of these should be equivalent to a profile that does neither.
+    # There was a bug in the InterpolatedImage code that handled this incorrectly.
+    image = psf.drawImage(nx=33, ny=33, scale=0.05, dtype=float)
+    compensated_psf = galsim.InterpolatedImage(image * 2) + galsim.InterpolatedImage(image * -1)
+    expected_flux = image.array.sum()
+    np.testing.assert_allclose(compensated_psf.flux, expected_flux)
+    photons = compensated_psf.shoot(n_photons, rng)
+    assert np.any(photons.flux < 0)
+    np.testing.assert_allclose(photons.getTotalFlux(), expected_flux, rtol=0.02)
 
 
 @timer
