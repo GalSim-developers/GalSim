@@ -346,6 +346,9 @@ def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
     pupil_plane_im.scale *= pupil_plane_im.header['HIERARCH PUPIL SCALE FACTOR'] * 1.e-6
 
     pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
+    # Reflect the Cycle 9 mask into the entrance-pupil frame of the aberration tables,
+    # matching STPSF 2.0.0's y inversion before applying these coefficients.
+    pupil_plane_im = pupil_plane_im.flip_ud()
 
     # This aperture is in terms of the entrance pupil orientation, which is also the frame
     # the project uses to define the aberrations. We'll keep everything in this orientation

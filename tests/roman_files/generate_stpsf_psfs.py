@@ -2,12 +2,18 @@
 
 Run from the repository root with STPSF and its reference data installed::
 
-    STPSF_PATH=/path/to/stpsf-data python tests/roman_files/generate_stpsf_psfs.py \
-        /path/to/wim_zernikes_cycle9.csv.gz
+    STPSF_PATH=/path/to/current-stpsf-data python tests/roman_files/generate_stpsf_psfs.py \
+        /path/to/cycle9-stpsf-data
 
-The original Cycle 9 CSV is archived at:
-https://github.com/Roman-HLIS-Cosmology-PIT/PSFSim/blob/main/src/psfsim/data/wim_zernikes_cycle9.csv.gz
-Its numeric columns match the WIM sheet of the bundled 20210204 spreadsheet,
+For now we are targeting the Cycle 9 input files, so the final argument is a path
+to that data, which are available from:
+https://stsci.box.com/shared/static/i3ui9gfypnhmu5ocec47ooci2ehwf9xf.gz
+The input directory supplies WFI/wim_zernikes_cycle9.csv and WFI/pupils/*.fits.gz.
+We intentionally don't use any of the reference files in GalSim's share directory.
+
+The archived pupil masks are reflected in y before loading to match the pupil
+orientation expected by current STPSF. The aberration coefficients are not reflected.
+The CSV's numeric columns match the WIM sheet of the bundled 20210204 spreadsheet,
 with repeated detector/wavelength/field-point rows removed.
 
 Current STPSF requires a different CSV schema. The adapter below changes only column
@@ -114,17 +120,18 @@ def convert_cycle9_table(input_path, output_path):
     converted.write(output_path, format='ascii.csv')
 
 
-def make_reference(sca, band, position, wavelength, aberration_path, work_dir, aperture, size):
+def make_reference(sca, band, position, wavelength, aberration_path, cycle9_data, work_dir,
+                   aperture, size):
     """Load Cycle 9 data with STPSF's public input methods and call WFI.calc_psf."""
-    data_dir = Path(__file__).resolve().parents[2] / 'share' / 'roman'
     pupil_type = 'F184' if band in ['F184', 'K213'] else 'skinny'
-    pupil_path = data_dir / ('RST_WIM_Filter_%s_SCA_%d.fits.gz' % (pupil_type, sca))
+    pupil_path = cycle9_data/'WFI'/'pupils'/(
+        'RST_WIM_Filter_%s_SCA_%d.fits.gz' % (pupil_type, sca))
     pupil, pupil_header = fits.getdata(pupil_path, header=True)
-
-    # The original mask encodes transmission as 0/255. STPSF expects 0/1; preserve
-    # the full-resolution geometry and the original physical pixel scale.
-    normalized_pupil = work_dir / ('pupil_%d.fits' % sca)
-    fits.writeto(normalized_pupil, pupil/255., header=pupil_header, overwrite=True)
+    # STPSF 2.0.0 inverted y before applying the Cycle 9 aberrations:
+    # https://github.com/spacetelescope/stpsf/blob/2.0.0/stpsf/stpsf_core.py#L445-L459
+    # Current STPSF inverts both axes after the aberrations, so adapt the old mask here.
+    pupil_path = work_dir/('pupil_%s_SCA_%d.fits' % (pupil_type, sca))
+    fits.writeto(pupil_path, np.flip(pupil, axis=0), header=pupil_header, overwrite=True)
 
     image_scale = wavelength * 1.e-9 / (
         2*pupil.shape[0]*pupil_header['PIXELSCL']) * (180/np.pi) * 3600
@@ -132,13 +139,18 @@ def make_reference(sca, band, position, wavelength, aberration_path, work_dir, a
         # distort_image defines its output sampling from this mean SIAF scale.
         # Eight samples per detector pixel permit square-pixel integration below.
         image_scale = (aperture.XSciScale + aperture.YSciScale)/2/8
+        # Make the PSF a little bigger than our target size so the distortion step
+        # doesn't need data off the edge of the stamp. We'll crop off the extra
+        # padding after warping.
+        padding = 4*8  # 4 original pixels on each side at 8x oversampling.
+        size += 2*padding
     wfi = stpsf.WFI()
     wfi.lock_aberrations(str(aberration_path))
     wfi.detector = 'WFI%02d' % sca
     # STPSF uses F062/F087/F158 rather than GalSim's historical R062/Z087/H158 names.
     wfi.filter = 'F'+band[1:]
     wfi.detector_position = position
-    wfi.lock_pupil(str(normalized_pupil))
+    wfi.lock_pupil(str(pupil_path))
 
     # STPSF adds a detector-specific wavefront-error map to the Zernike aberrations.
     # GalSim's Cycle 9 model uses only the Zernike table, so disable that extra map.
@@ -166,6 +178,7 @@ def make_reference(sca, band, position, wavelength, aberration_path, work_dir, a
         result[0].header['DET_X'] = position[0]+1
         result[0].header['DET_Y'] = position[1]+1
         distorted = stpsf.distortion.distort_image(result, aper=aperture)
+        distorted = distorted[padding:-padding, padding:-padding]
         image = poppy.utils.rebin_array(distorted, rc=(8, 8))
         header['PIXELSCL'] = image_scale*8
         header['SIAFVER'] = pysiaf.__version__
@@ -175,13 +188,14 @@ def make_reference(sca, band, position, wavelength, aberration_path, work_dir, a
     header['BANDPASS'] = band
     header['STPSFVER'] = stpsf.__version__
     header['POPPYVER'] = poppy.__version__
+    header['STPSFDAT'] = (cycle9_data/'version.txt').read_text().strip()
 
     return image, header
 
 
 if __name__ == '__main__':
     parser = argparse.ArgumentParser(description=__doc__)
-    parser.add_argument('cycle9_csv', type=Path, help='Original wim_zernikes_cycle9.csv[.gz]')
+    parser.add_argument('cycle9_data', type=Path, help='Archived STPSF 2.0.0 reference-data directory')
     args = parser.parse_args()
     if poppy_clips_phase():
         poppy.ZernikeWFE.get_opd = unclipped_zernike_opd
@@ -190,7 +204,7 @@ if __name__ == '__main__':
     with TemporaryDirectory() as directory:
         work_dir = Path(directory)
         aberration_path = work_dir / 'cycle9.csv'
-        convert_cycle9_table(args.cycle9_csv, aberration_path)
+        convert_cycle9_table(args.cycle9_data/'WFI'/'wim_zernikes_cycle9.csv', aberration_path)
         # Test at 8 points in the focal plane across different SCAs, filters, position
         # on the sensor, and wavelength relative to the band fiducial.
         # Positions are zero-based science pixels.
@@ -217,7 +231,7 @@ if __name__ == '__main__':
             aperture = siaf['WFI%02d_FULL' % sca]
             aperture.set_attitude_matrix(attitude)
             image, header = make_reference(sca, band, position, wavelength, aberration_path,
-                                           work_dir, aperture, 41*8)
+                                           args.cycle9_data, work_dir, aperture, 41*8)
             x, y = position[0]+1, position[1]+1
             ra, dec = aperture.sci_to_sky(x, y)
             header['FPA_RA'], header['FPA_DEC'], header['FPA_PA'] = fpa_ra, fpa_dec, fpa_pa
@@ -235,17 +249,17 @@ if __name__ == '__main__':
         # In addition to the images drawn on the science images including the pixel integration,
         # we draw the SCA 8 profile at finer resolution. This one is particularly interesting,
         # since one of the diffraction spikes visibly splits into two lines, so the position
-        # of this split is a strong validation of the overall orienation of the profile.
+        # of this split is a strong validation of the overall orientation of the profile.
         sca, band, position, wavelength = 8, 'F184', (2043, 2043), 1842.
         image, header = make_reference(sca, band, position, wavelength, aberration_path,
-                                       work_dir, None, 2049)
-        # Keep the 64-76 degree sector at 350-400 lambda/D used by the spike test,
+                                       args.cycle9_data, work_dir, None, 2049)
+        # Keep the 104-116 degree sector at 350-400 lambda/D used by the spike test,
         # with at least 16 pixels of margin for cubic interpolation. Preserve pixel
         # coordinates relative to the PSF center, which is outside this cutout.
         center = (image.shape[0]-1)//2
-        header['GS_XMIN'] = 1180-center
+        header['GS_XMIN'] = 639-center
         header['GS_YMIN'] = 1650-center
-        image = image[1650:1840, 1180:1410]
+        image = image[1650:1840, 639:869]
         spike_filename = Path(__file__).with_name('stpsf_cycle9_spikes.fits')
         fits.PrimaryHDU(image.astype(np.float32), header=header).writeto(
             spike_filename, overwrite=True)
