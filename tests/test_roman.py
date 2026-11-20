@@ -908,8 +908,8 @@ def test_roman_diffraction_spikes():
     feature appears in the same place for both GalSim and STPSF images.
     """
     # The finely sampled F184 reference resolves the split spike particularly clearly.
-    # We use SCA 8 for this, where the feature is at about 70 degrees. It's a bit more
-    # obvious on SCA 7, but there it is closer to 45 degrees, so provides a less definitive
+    # We use SCA 8 for this, where the feature is at about 110 degrees. It's a bit more
+    # obvious on SCA 7, but there it is closer to 135 degrees, so provides a less definitive
     # test of the orientation we are trying to validate.
     from scipy.ndimage import map_coordinates
     from scipy.signal import find_peaks
@@ -925,16 +925,16 @@ def test_roman_diffraction_spikes():
     galsim_image = psf.drawImage(bounds=stpsf_image.bounds, scale=scale,
                                 center=galsim.PositionD(0, 0), method='no_pixel')
 
-    # The diffraction spike near 70 degrees from the x axis splits due to the strut in the
+    # The diffraction spike near 110 degrees from the x axis splits due to the strut in the
     # pupil plane having its two edges slightly non-parallel to each other, leading to two
     # slightly different spike directions for the diffraction spikes. I believe this is
     # a cable that runs along the strut, which becomes visible at this relatively large angle
     # on the focal plane.
     # We verify the split spike over a range of 350-400 lambda/D.
-    # The two pieces have angles near 69.4 and 70.6 degrees from +x.
+    # The two pieces have angles near 109.3 and 110.5 degrees from +x.
     diffraction_scale = wave*1.e-9/galsim.roman.diameter * (galsim.radians/galsim.arcsec)
     radii = np.linspace(350, 400, 201)*diffraction_scale/header['PIXELSCL']
-    angles = np.linspace(64, 76, 1201)
+    angles = np.linspace(104, 116, 1201)
     theta = np.deg2rad(angles)
     x = radii[:, None]*np.cos(theta) - stpsf_image.xmin
     y = radii[:, None]*np.sin(theta) - stpsf_image.ymin
@@ -963,8 +963,8 @@ def test_roman_stpsf():
         stpsf: 2.3.1
         pysiaf: 0.24.1
         poppy: 1.2.0
-        STPSF reference data: 2.3.0.
-        Pupils and aberrations: Roman Cycle 9, originally distributed with webbpsf-data-1.2.1
+        Installed STPSF reference data: 2.3.0.
+        Pupils and aberrations: Roman Cycle 9, independently loaded from stpsf-data-2.0.0
         Roman SIAF: January 21, 2022, bundled with PySIAF 0.24.1
     """
     from galsim._pyfits import pyfits
