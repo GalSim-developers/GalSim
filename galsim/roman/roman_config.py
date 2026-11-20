@@ -42,6 +42,9 @@ def _BuildRomanPSF(config, base, ignore, gsparams, logger):
         'wavelength' : float,
         'bandpass' : str,
         'use_SCA_pos': bool,
+        'boresight': CelestialCoord,
+        'telescope_PA': Angle,
+        'interpolant': str,
     }
     ignore += ['extra_aberrations']
 

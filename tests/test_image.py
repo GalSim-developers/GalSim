@@ -3690,6 +3690,7 @@ def test_flips():
     np.testing.assert_array_equal(im2.array, im1.array.T)
     assert im1(1,1) == im2(1,1)
     assert im1(8,3) == im2(3,8)
+    assert im2.wcs == im1.wcs
 
     im3 = im1.flip_ud()
     assert im3.bounds == galsim.BoundsI(1,19,1,13)
@@ -3697,6 +3698,7 @@ def test_flips():
     np.testing.assert_array_equal(im3.array, im1.array[::-1,:])
     assert im1(1,1) == im3(1,13)
     assert im1(8,3) == im3(8,11)
+    assert im3.wcs == im1.wcs
 
     im4 = im1.flip_lr()
     assert im4.bounds == galsim.BoundsI(1,19,1,13)
@@ -3704,6 +3706,7 @@ def test_flips():
     np.testing.assert_array_equal(im4.array, im1.array[:,::-1])
     assert im1(1,1) == im4(19,1)
     assert im1(8,3) == im4(12,3)
+    assert im4.wcs == im1.wcs
 
     im5 = im1.rot_cw()
     assert im5.bounds == galsim.BoundsI(1,13,1,19)
@@ -3711,6 +3714,7 @@ def test_flips():
     np.testing.assert_array_equal(im5.array, im1.array.T[::-1,:])
     assert im1(1,1) == im5(1,19)
     assert im1(8,3) == im5(3,12)
+    assert im5.wcs == im1.wcs
 
     im6 = im1.rot_ccw()
     assert im6.bounds == galsim.BoundsI(1,13,1,19)
@@ -3718,6 +3722,7 @@ def test_flips():
     np.testing.assert_array_equal(im6.array, im1.array.T[:,::-1])
     assert im1(1,1) == im6(13,1)
     assert im1(8,3) == im6(11,8)
+    assert im6.wcs == im1.wcs
 
     im7 = im1.rot_180()
     assert im7.bounds == galsim.BoundsI(1,19,1,13)
@@ -3725,6 +3730,7 @@ def test_flips():
     np.testing.assert_array_equal(im7.array, im1.array[::-1,::-1])
     assert im1(1,1) == im7(19,13)
     assert im1(8,3) == im7(12,11)
+    assert im7.wcs == im1.wcs
 
 
 if __name__ == "__main__":

@@ -1863,53 +1863,47 @@ class Image:
     def transpose(self):
         """Return the tranpose of the image.
 
-        Note: The returned image will have an undefined wcs.
-        If you care about the wcs, you will need to set it yourself.
+        Note: The returned image will keep the original wcs.
         """
         bT = _BoundsI(self.ymin, self.ymax, self.xmin, self.xmax)
-        return _Image(self.array.T, bT, None)
+        return _Image(self.array.T, bT, wcs=self.wcs)
 
     def flip_lr(self):
         """Return a version of the image flipped left to right.
 
-        Note: The returned image will have an undefined wcs.
-        If you care about the wcs, you will need to set it yourself.
+        Note: The returned image will keep the original wcs.
         """
-        return _Image(self.array[:,::-1], self._bounds, None)
+        return _Image(self.array[:,::-1], self._bounds, wcs=self.wcs)
 
     def flip_ud(self):
         """Return a version of the image flipped top to bottom.
 
-        Note: The returned image will have an undefined wcs.
-        If you care about the wcs, you will need to set it yourself.
+        Note: The returned image will keep the original wcs.
         """
-        return _Image(self.array[::-1,:], self._bounds, None)
+        return _Image(self.array[::-1,:], self._bounds, wcs=self.wcs)
 
     def rot_cw(self):
         """Return a version of the image rotated 90 degrees clockwise.
 
-        Note: The returned image will have an undefined wcs.
-        If you care about the wcs, you will need to set it yourself.
+        Note: The returned image will keep the original wcs.
         """
         bT = _BoundsI(self.ymin, self.ymax, self.xmin, self.xmax)
-        return _Image(self.array.T[::-1,:], bT, None)
+        return _Image(self.array.T[::-1,:], bT, wcs=self.wcs)
 
     def rot_ccw(self):
         """Return a version of the image rotated 90 degrees counter-clockwise.
 
-        Note: The returned image will have an undefined wcs.
-        If you care about the wcs, you will need to set it yourself.
+        Note: The returned image will keep the original wcs.
         """
         bT = _BoundsI(self.ymin, self.ymax, self.xmin, self.xmax)
-        return _Image(self.array.T[:,::-1], bT, None)
+        return _Image(self.array.T[:,::-1], bT, wcs=self.wcs)
 
     def rot_180(self):
         """Return a version of the image rotated 180 degrees.
 
-        Note: The returned image will have an undefined wcs.
-        If you care about the wcs, you will need to set it yourself.
+        Note: The returned image will keep the original wcs.
         """
-        return _Image(self.array[::-1,::-1], self._bounds, None)
+        return _Image(self.array[::-1,::-1], self._bounds, wcs=self.wcs)
 
     def depixelize(self, x_interpolant):
         """Return a depixelized version of the image.

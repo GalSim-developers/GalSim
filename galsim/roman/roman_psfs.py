@@ -19,16 +19,17 @@
 import numpy as np
 import os
 
-from . import pixel_scale, n_pix, pixel_scale_mm
+from . import pixel_scale_mm
 from . import n_pix, n_sca, longwave_bands, shortwave_bands
 from . import diameter, obscuration
 from .roman_bandpass import getBandpass
 
 from ..utilities import LRU_Cache
 from ..position import PositionD
-from ..errors import GalSimValueError, GalSimRangeError
+from ..errors import GalSimValueError, GalSimRangeError, GalSimIncompatibleValuesError
 from ..bandpass import Bandpass
-from ..wcs import PixelScale
+from ..angle import degrees
+from ..celestial import CelestialCoord
 from ..gsparams import GSParams
 from ..phase_psf import Aperture
 from .. import OpticalPSF, ChromaticOpticalPSF
@@ -45,7 +46,7 @@ PSF for Roman.
 
 # Define a default set of bandpasses for which this routine works.
 default_bandpass_list = ['J129', 'F184', 'W149', 'Y106', 'Z087', 'H158']
-# Prefix for files containing information about Zernikes for each SCA for cycle 7.
+# Prefix for files containing information about Zernikes for each SCA for Cycle 9.
 zemax_filepref = "Roman_Cycle-9_WFI_zim_zernikes_082623"
 zemax_filesuff = '.txt'
 zemax_wavelength = 1293. #nm
@@ -59,14 +60,15 @@ def getPSF(SCA, bandpass,
            SCA_pos=None, pupil_bin=4, wcs=None,
            n_waves=None, extra_aberrations=None,
            wavelength=None, gsparams=None,
-           logger=None, high_accuracy=None, approximate_struts=None):
+           logger=None, high_accuracy=None, approximate_struts=None,
+           boresight=None, telescope_PA=None, interpolant='lanczos15'):
     """Get a single PSF for Roman ST observations.
 
     The user must provide the SCA and bandpass; the latter is used when setting up the pupil
     plane configuration and when interpolating chromatic information, if requested.
 
-    This routine carries out linear interpolation of the aberrations within a given SCA, based on
-    the Roman Cycle 9 specification of the aberrations as a function of focal plane
+    This routine carries out quadratic interpolation of the aberrations within a given SCA, based
+    on the Roman Cycle 9 specification of the aberrations as a function of focal plane
     position, more specifically from the WebbPSF data files from webbpsf-data-1.2.1.tar.gz
     downloaded from https://webbpsf.readthedocs.io/en/latest/installation.html#data-install.
     The abberation file is webbpsf-data/WFI/wim_zernikes_cycle9.csv.
@@ -99,20 +101,30 @@ def getPSF(SCA, bandpass,
 
     The PSF that is returned by default will be oriented with respect to the SCA coordinates,
     not world coordinates as is typical in GalSim.  The pupil plane has a fixed orientation
-    with respect to the focal plane, so the PSF rotates with the telescope.  To obtain a
-    PSF in world coordinates, which can be convolved with galaxies (that are normally described
-    in world coordinates), you may pass in a ``wcs`` parameter to this function.  This will
-    project the PSF into world coordinates according to that WCS before returning it.  Otherwise,
-    the return value is equivalent to using ``wcs=galim.PixelScale(galsim.roman.pixel_scale)``.
+    with respect to the focal plane, so the PSF rotates with the telescope.
+
+    To orient the PSF on the sky, supply a ``wcs``. The local rotation and (if present) reflection
+    will be applied, but not any distortion component of the WCS. This means that the distortion
+    is correctly applied when drawing the PSF onto an image with the same WCS.
+
+    For real observations, the rotation direction can be improved further by passing
+    ``boresight`` and ``telescope_PA``. The latter in particular sets the field rotation
+    of the Roman v3 axis at the boresight position. These values are available in Roman
+    ASDF data files in ``roman.meta.pointing`` as the values ``ra_v1``, ``dec_v1``, and
+    ``pa_v3``::
+
+        boresight = galsim.CelestialCoord(ra_v1 * galsim.degrees, dec_v1 * galsim.degrees)
+        psf = galsim.roman.getPSF(
+            SCA, bandpass, SCA_pos=image_pos, wcs=wcs, boresight=boresight,
+            telescope_PA=pa_v3 * galsim.degrees)
 
     The calculation takes advantage of the fact that the diffraction limit and aberrations have a
     simple, understood wavelength-dependence.  (The Roman abberation data for Cycle 9 does in fact
     provide aberrations as a function of wavelength, but the deviation from the expected chromatic
-    dependence is sub-percent so we neglect it here.)  For reference, the script used to parse the
-    Zernikes given on the webpage and create the files in the GalSim repository can be found in
-    ``devel/external/parse_roman_zernikes_1217.py``.  The resulting chromatic object can be used to
-    draw into any of the Roman bandpasses, though the pupil plane configuration will only be
-    correct for those bands in the same range (i.e., long- or short-wavelength bands).
+    dependence is sub-percent so we neglect it here.) The stored nominal coefficients are in
+    waves at 1293 nm, in the entrance pupil frame. The resulting chromatic object can be
+    used to draw into any of the Roman bandpasses, though the pupil plane configuration will only
+    be correct for those bands in the same range (i.e., long- or short-wavelength bands).
 
     For applications that require very high accuracy in the modeling of the PSF, with very limited
     aliasing, you may want to lower the folding_threshold in the gsparams.  Otherwise very bright
@@ -125,16 +137,14 @@ def getPSF(SCA, bandpass,
     provide an optional keyword ``extra_aberrations`` that will be included on top of those that are
     part of the design.  This should be in the same format as for the ChromaticOpticalPSF class,
     with units of waves at the fiducial wavelength, 1293 nm. Currently, only aberrations up to order
-    22 (Noll convention) are simulated.  For Roman, the tolerance for additional
-    aberrations was a total of 90 nanometers RMS as of mid-2015, distributed largely among coma,
-    astigmatism, trefoil, and spherical aberrations (NOT defocus).  This information might serve as
-    a guide for reasonable ``extra_aberrations`` inputs.  The reference for that number is
-    an earlier Cycle 5 document:
+    22 (Noll convention) are simulated.
 
-    http://roman.gsfc.nasa.gov/science/sdt_public/wps/references/instrument/README_AFTA_C5_WFC_Zernike_and_Field_Data.pdf
-
-    However, the default (non-extra) aberrations are from Cycle 7 material linked earlier in this
-    docstring.
+    .. note::
+        The ``extra_aberrations`` coefficients use the same entrance pupil frame as the
+        nominal coefficients. They are added directly before propagation, without
+        coefficient-sign changes. The resulting PSF is rotated by 180 degrees into the exit
+        pupil orientation, which matches the detector frame, before any rotation due to the
+        WCS or telescope orientation.
 
     Jitter and charge diffusion are, by default, not included.  Users who wish to include these can
     find some guidelines for typical length scales of the Gaussians that can represent these
@@ -160,11 +170,16 @@ def getPSF(SCA, bandpass,
                             plane image.
         SCA_pos:            Single galsim.PositionD indicating the position within the SCA
                             for which the PSF should be created. If None, the exact center of
-                            the SCA is chosen. [default: None]
+                            the SCA is chosen. This should be given using the normal x,y
+                            position in the image using the normal (1,1) origin convention.
+                            [default: None]
         pupil_bin:          The binning to apply to the pupil plane image. (See discussion above.)
                             [default: 4]
-        wcs:                The WCS to use to project the PSF into world coordinates.
-                            [default: galsim.PixelScale(galsim.roman.pixel_scale)]
+        wcs:                The image WCS used to orient the PSF in world coordinates. With no
+                            attitude information, only its local rotation and reflection are
+                            used. With ``boresight`` and ``telescope_PA``, it must be celestial
+                            and is used only to find the sky position at ``SCA_pos``.
+                            [default: None, which retains the science-image orientation]
         n_waves:            Number of wavelengths to use for setting up interpolation of the
                             chromatic PSF objects, which can lead to much faster image
                             rendering.  If None, then no interpolation is used. Note that
@@ -176,17 +191,23 @@ def getPSF(SCA, bandpass,
                             provided in units of waves at the fiducial wavelength of 1293 nm,
                             as an array of length 23 with entries 4 through 22 corresponding
                             to defocus through the 22nd Zernike in the Noll convention.
+                            The pupil axes are the original Project axes, shared with the
+                            nominal coefficients, as described above.
                             [default: None]
         wavelength:         An option to get an achromatic PSF for a single wavelength, for
                             users who do not care about chromaticity of the PSF.  If None,
                             then the fully chromatic PSF is returned.  Alternatively the user
                             should supply either (a) a wavelength in nanometers, and they
-                            will get achromatic OpticalPSF objects for that wavelength, or
-                            (b) a bandpass object, in which case they will get achromatic
-                            OpticalPSF objects defined at the effective wavelength of that
-                            bandpass.  [default: False]
+                            will get an achromatic PSF for that wavelength, or (b) a bandpass
+                            object, in which case they will get an achromatic PSF at the
+                            effective wavelength of that bandpass.  [default: False]
         gsparams:           An optional GSParams argument.  See the docstring for GSParams
                             for details. [default: None]
+        boresight:          Telescope boresight as a `CelestialCoord`. [default: None]
+        telescope_PA:       Position angle of the telescope V3 axis at ``boresight``, measured
+                            from celestial north toward east, as a `galsim.Angle`. [default: None]
+        interpolant:        Interpolant instance or string to pass to `OpticalPSF`.
+                            [default: 'lanczos15']
 
     Returns:
         A single PSF object (either a ChromaticOpticalPSF or an OpticalPSF depending on the
@@ -237,7 +258,7 @@ def getPSF(SCA, bandpass,
 
     # SCA_pos: if None, then all should just be center of the SCA.
     if SCA_pos is None:
-        SCA_pos = PositionD(n_pix/2, n_pix/2)
+        SCA_pos = PositionD((n_pix+1)/2, (n_pix+1)/2)
 
     # Parse the bandpasses to see which pupil plane image is needed
     pupil_plane_type = None
@@ -259,18 +280,54 @@ def getPSF(SCA, bandpass,
     if not isinstance(wavelength, (Bandpass, float, type(None))):
         raise TypeError("wavelength should either be a Bandpass, float, or None.")
 
+    # Attitude information must include both boresight and telescope_PA.
+    if (boresight is None) != (telescope_PA is None):
+        raise GalSimIncompatibleValuesError(
+            "boresight and telescope_PA must be supplied together",
+            boresight=boresight, telescope_PA=telescope_PA)
+
     # Now call _get_single_PSF().
     psf = _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                           n_waves, extra_aberrations, wavelength,
-                          pupil_plane_type, gsparams)
+                          pupil_plane_type, gsparams, interpolant)
 
-    # Apply WCS.
-    # The current version is in arcsec units, but oriented parallel to the image coordinates.
-    # So to apply the right WCS, project to pixels using the Roman mean pixel_scale, then
-    # project back to world coordinates with the provided wcs.
-    if wcs is not None:
-        scale = PixelScale(pixel_scale)
-        psf = wcs.toWorld(scale.toImage(psf), image_pos=SCA_pos)
+    if boresight is not None:
+        # The boresight direction is what Roman defines as the V1 axis.
+        # V3 is a fixed direction perpendicular to this. It is normal to the Solar Array
+        # Sun Shield. Also called OBS +Z in the spacecraft coordinates.
+        # The telescope_PA is defined as the rotation angle between +V3 and North, where the
+        # sign is defined as sweeping from North towards East to the +V3 axis.
+        # The raw PSF we have now is oriented so "up" is -60 degrees from the V3 direction.
+        # So we need to rotate the PSF by approximately (telescope_PA - 60) degrees.
+        # Approximately, because the direction towards north varies across the focal plane.
+        # That is the angle to use at the boresight. In general, we need the direction of the
+        # V3 axis and find the local rotation angle at the given source position.
+
+        # Determine the V3 direction. We need it to be 90 degrees away from boresight and
+        # telescope_PA degrees rotated from local north.
+        # The Postel projection has this cool property that it preserves the angular distance
+        # from the origin, so if we set a point at 90 degrees from the origin in (u,v) at the
+        # correct angle from North (+v direction), then deprojecting with Postel will give us
+        # the CelestialCoord with the correct direction at a right angle to the boresight.
+        # Projected u increases towards west, so its eastward component has a minus sign.
+        sin_pa, cos_pa = telescope_PA.sincos()
+        v3 = boresight.deproject(-90*degrees*sin_pa, 90*degrees*cos_pa, projection='postel')
+
+        # Now measure the direction of V3 relative to local north at the source to get the
+        # correct rotation at the source position.
+        sky_pos = wcs.toWorld(SCA_pos)
+        north = CelestialCoord(0*degrees, 90*degrees)
+        theta = sky_pos.angleBetween(north, v3)
+        psf = psf.rotate(theta - 60*degrees)
+    elif wcs is not None:
+        # Without an explicit rotation angle from telescope_PA, we can get a good approximation
+        # to the correct rotation and possible reflection from the WCS directly. We don't want
+        # to apply the distortion, since that's real and needs to get applied when drawing, but
+        # we can use the orthogonal part of the jacobian to orient the PSF nearly correctly.
+        _, _, theta, flip = wcs.jacobian(image_pos=SCA_pos).getDecomposition()
+        if flip:
+            psf = psf.transform(0, 1, 1, 0)
+        psf = psf.rotate(theta)
 
     return psf
 
@@ -289,13 +346,13 @@ def __make_aperture(SCA, pupil_plane_type, pupil_bin, wave, gsparams):
     pupil_plane_im.scale *= pupil_plane_im.header['HIERARCH PUPIL SCALE FACTOR'] * 1.e-6
 
     pupil_plane_im = pupil_plane_im.bin(pupil_bin,pupil_bin)
-
-    #The project provides pupils in the exit frame orientation. To switch to WFI coords, we need to flip following:
-    #https://github.com/Roman-HLIS-Cosmology-PIT/PSFSim/blob/main/docs/coordinates.rst, which has the chirality
-    #looking in the telescope. Can be accomplished by flipping the vertical axis.  
-           
+    # Reflect the Cycle 9 mask into the entrance-pupil frame of the aberration tables,
+    # matching STPSF 2.0.0's y inversion before applying these coefficients.
     pupil_plane_im = pupil_plane_im.flip_ud()
 
+    # This aperture is in terms of the entrance pupil orientation, which is also the frame
+    # the project uses to define the aberrations. We'll keep everything in this orientation
+    # and then rotate to the exit pupil coordinates at the end of _get_single_PSF.
     aper = Aperture(lam=wave, diam=diameter,
                     obscuration=obscuration,
                     pupil_plane_im=pupil_plane_im,
@@ -308,7 +365,7 @@ _make_aperture = LRU_Cache(__make_aperture)
 
 def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
                     n_waves, extra_aberrations, wavelength,
-                    pupil_plane_type, gsparams):
+                    pupil_plane_type, gsparams, interpolant):
     """Routine for making a single PSF.  This gets called by `getPSF` after it parses all the
        options that were passed in.  Users will not directly interact with this routine.
     """
@@ -324,8 +381,8 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
 
     # Start reading in the aberrations for that SCA
     aberrations, x_pos, y_pos = _read_aberrations(SCA)
-    # Do bilinear interpolation, unless we're exactly at the center (default).
-    use_aberrations = _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos)
+    # Interpolate using the center and four corner values.
+    use_aberrations = _interp_aberrations(aberrations, x_pos, y_pos, SCA_pos)
 
     if extra_aberrations is not None:
         use_aberrations[:len(extra_aberrations)] += extra_aberrations
@@ -338,7 +395,7 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
     if wavelength is None:
         PSF = ChromaticOpticalPSF(lam=zemax_wavelength,
                                   diam=diameter, aberrations=use_aberrations,
-                                  aper=aper, gsparams=gsparams)
+                                  aper=aper, gsparams=gsparams, interpolant=interpolant)
         if n_waves is not None:
             # To decide the range of wavelengths to use, check the bandpass.
             bp = getBandpass(bandpass)
@@ -348,15 +405,20 @@ def _get_single_PSF(SCA, bandpass, SCA_pos, pupil_bin,
         tmp_aberrations = use_aberrations * zemax_wavelength / wavelength
         PSF = OpticalPSF(lam=wavelength, diam=diameter,
                          aberrations=tmp_aberrations,
-                         aper=aper, gsparams=gsparams)
+                         aper=aper, gsparams=gsparams, interpolant=interpolant)
 
-    return PSF
+    # The project's pupil plane mask and aberrations are all defined in terms of the entrance
+    # pupil. We need to rotate this by 180 degrees into the exit pupil coordinates, which
+    # matches the detector frame.
+    # cf. https://stpsf.readthedocs.io/en/stable/STPSF_Roman_Pupil_Orientation.html
+    # Fourier propagation commutes with this rotation, so transform the completed PSF.
+    return PSF.transform(-1, 0, 0, -1)
 
 def _read_aberrations(SCA):
     """
     This is a helper routine that reads in aberrations for a particular SCA and wavelength (given as
     galsim.roman.roman_psfs.zemax_wavelength) from stored files, and returns them along with the
-    field positions.
+    field positions. The returned coefficients use the entrance pupil frame.
 
     Parameters:
         SCA:        The identifier for the SCA, from 1-18.
@@ -371,63 +433,48 @@ def _read_aberrations(SCA):
 
     # Read in data.
     dat = np.loadtxt(infile)
-    # It actually has 5 field positions, not just 1, to allow us to make position-dependent PSFs
-    # within an SCA eventually.  Put it in the required format: an array of length (5 field
-    # positions, 23 Zernikes), with the first entry empty (Zernike polynomials are 1-indexed so we
+    # Put it in the required format: an array of shape (5 field positions, 23 Zernikes),
+    # with the first entry in each column empty (Zernike polynomials are 1-indexed so we
     # use entries 1-22).  The units are waves.
     aberrations = np.zeros((5,23))
     aberrations[:,1:] = dat[:,5:]
-    # Also get the field position.  The file gives it in mm with respect to the center, but we
-    # want it in pixels with respect to the corner. The pixel size of the detector is 0.01 mm/pixel
 
-    x = dat[:,1]/pixel_scale_mm
+    # The table's local positions uses the FPA axes rather than the image coordinate
+    # (aka science frame). Science pixels have the opposite x direction and the same y direction
+    # as the FPA coordinates on every SCA. Also, the positions in the file are relative to the
+    # center rather than the corner. We use the GalSim standard convention of one-based
+    # coordinates, so the center is at (1+n_pix)/2.
+    x = -dat[:,1]/pixel_scale_mm
     y = dat[:,2]/pixel_scale_mm
-    if SCA % 3 != 0:
-        # For these, the SCA is rotated 180 degrees relative to the nominal X, Y coordinates.
-        x = -x
-        y = -y
-
-    x += n_pix/2
-    y += n_pix/2
+    x += (n_pix+1)/2
+    y += (n_pix+1)/2
 
     return aberrations, x, y
 
-def _interp_aberrations_bilinear(aberrations, x_pos, y_pos, SCA_pos):
-    """
-    This is a helper routine to do bilinear interpolation of aberrations defined at 4 field
-    positions: the four corners.  Note that we also have aberrations at the center position,
-    but these are generally quite close (within a few percent) of what would come from this bilinear
-    interpolation.  So for simplicity, we just do the bilinear interpolation.
-    """
-    # The data comprise 5 rows: center, lower-left, upper-left, upper-right, lower-right.
-    # The x,y values at the corners aren't precisely identical, but despite that, just
-    # take the outer one and do a simple bilinear interpolation as though it were a rectangle.
+def _interp_aberrations(aberrations, x_pos, y_pos, SCA_pos):
+    """Fit five samples quadratically through Z11 and with bilinear least squares above Z11.
 
-    # First, figure out which point is which corner. (0 is always the center.)
-    for i in range(1,5):
-        if x_pos[i] < x_pos[0] and y_pos[i] < y_pos[0]:
-            ll = i # lower-left
-        if x_pos[i] < x_pos[0] and y_pos[i] > y_pos[0]:
-            ul = i # upper-left
-        if x_pos[i] > x_pos[0] and y_pos[i] < y_pos[0]:
-            lr = i # lower-right
-        if x_pos[i] > x_pos[0] and y_pos[i] > y_pos[0]:
-            ur = i # upper-right
-    assert x_pos[ll] < x_pos[0] and y_pos[ll] < y_pos[0]
-    assert x_pos[ul] < x_pos[0] and y_pos[ul] > y_pos[0]
-    assert x_pos[lr] > x_pos[0] and y_pos[lr] < y_pos[0]
-    assert x_pos[ur] > x_pos[0] and y_pos[ur] > y_pos[0]
-    min_x = np.min(x_pos)
-    min_y = np.min(y_pos)
-    max_x = np.max(x_pos)
-    max_y = np.max(y_pos)
-    x_frac = (SCA_pos.x - min_x) / (max_x - min_x)
-    y_frac = (SCA_pos.y - min_y) / (max_y - min_y)
-    ll_ab = aberrations[ll, :]
-    ul_ab = aberrations[ul, :]
-    lr_ab = aberrations[lr, :]
-    ur_ab = aberrations[ur, :]
-    interp_ab = (1.0-x_frac)*(1.0-y_frac)*ll_ab + (1.0-x_frac)*y_frac*ul_ab + \
-        x_frac*(1.0-y_frac)*lr_ab + x_frac*y_frac*ur_ab
+    The input data for Z12+ seem to be significantly noisier than Z4-11, so rather than let
+    the fit be fully quadratic through the 5 points (4 corners + center), we instead limit the
+    interpolation to bilinear and use the 5 points to get a least-squares fit.
+    """
+    # Shift to the requested position and scale both coordinates by the field extent.
+    # This preserves the polynomial space while keeping the solve well conditioned.
+    scale = max(np.ptp(x_pos), np.ptp(y_pos))
+    x = (x_pos-SCA_pos.x)/scale
+    y = (y_pos-SCA_pos.y)/scale
+    basis = np.array([np.ones(5), x, y, x*y, x*x+y*y])
 
-    return interp_ab.flatten()
+    # For Z4-11, do the full fit.
+    # Each column is the basis at one sample. At the requested position, x=y=0,
+    # so solve for weights whose basis values are [1, 0, 0, 0, 0].
+    weights = np.linalg.solve(basis, [1., 0., 0., 0., 0.])
+    low_coeff = weights @ aberrations[:,:12]
+
+    # For Z12+, do a least squares fit.
+    # Omit the final row of the basis matrix.
+    # The value at x=y=0 is the constant coefficient of the fit, so take the first
+    # row of the returned solution.
+    high_coeff = np.linalg.lstsq(basis[:4].T, aberrations[:,12:], rcond=None)[0][0]
+
+    return np.concatenate((low_coeff, high_coeff))

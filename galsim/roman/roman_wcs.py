@@ -94,6 +94,10 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     Cycle 6, which includes some significant updates from Cycle 5, including a 90 degree rotation of
     the focal plane axes relative to the payload axes, and two rows of SCAs are swapped.
 
+    The image coordinates expected for the WCS are what are called science coordinates for
+    Roman. These are the usual (1-based) x,y on the science images, not the FPA coordinates
+    used natively by the project in the original reference data for the WCS.
+
     The user must specify a position for observation, at which the center of the focal plane array
     will point.  This must be supplied as a CelestialCoord ``world_pos``.  In general, only certain
     positions are observable on certain dates, and for a given position there is an optimal position
@@ -137,8 +141,6 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
     # Sun in the absence of a roll offset (i.e., roll offset = 0 defines the optimal position angle
     # for the observatory), +Y_obs makes a right-handed system.
     #
-    # The x,y axes of each SCA are shown in the figure mapping_v210503.pdf in the devel/roman
-    # directory.  Some are 180 rotated with respect to others.
     # The data in sip_filename give the coordinate transformation from each SCA's image x,y
     # coordinates to the WFI Local coordinate system.  +Y in this system points away from the
     # center of the observatory.  And +X is to the right if +Y is up.
@@ -198,6 +200,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
 
         # Compute CD coefficients: extract the linear terms from the a_sip, b_sip arrays.  These
         # linear terms are stored in the SIP arrays for convenience.
+        # The table is fitted directly in science-pixel coordinates by make_sip_file.py.
         a10 = a_sip[i_sca,1,0]
         a11 = a_sip[i_sca,0,1]
         b10 = b_sip[i_sca,1,0]
@@ -218,7 +221,6 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
                       "partial of second axis coordinate w.r.t. x"),
             ('CD2_2', -sin_pa_sca * a11 + cos_pa_sca * b11,
                       "partial of second axis coordinate w.r.t. y"),
-            ('ORIENTAT', pa_sca / coord.degrees, "position angle of image y axis (deg. e of n)"),
             ('LONPOLE', phi_p / coord.degrees, "Native longitude of celestial pole"),
         ])
         for i in range(n_sip):
@@ -227,7 +229,7 @@ def getWCS(world_pos, PA=None, date=None, SCAs=None, PA_is_FPA=False):
                     sipstr = "A_%d_%d"%(i,j)
                     header.append( (sipstr, a_sip[i_sca,i,j]) )
                     sipstr = "B_%d_%d"%(i,j)
-                    header.append( (sipstr,  b_sip[i_sca,i,j]) )
+                    header.append( (sipstr, b_sip[i_sca,i,j]) )
 
         header = FitsHeader(header)
         wcs = GSFitsWCS(header=header)
@@ -298,7 +300,7 @@ def convertCenter(world_pos, SCA, PA=None, date=None, PA_is_FPA=False, tol=0.5*c
     shift_val = 1000.0 # arcsec
     while shift_val > tol/coord.arcsec:
         test_wcs = getWCS(fpa_cent, PA, date, use_SCA, PA_is_FPA)[use_SCA]
-        im_cent_pos = PositionD(n_pix/2, n_pix/2)
+        im_cent_pos = PositionD((n_pix+1)/2, (n_pix+1)/2)
         test_sca_pos = test_wcs.toWorld(im_cent_pos)
         delta_ra = np.cos(world_pos.dec)*(world_pos.ra-test_sca_pos.ra)
         delta_dec = world_pos.dec-test_sca_pos.dec
@@ -351,7 +353,13 @@ def findSCA(wcs_dict, world_pos, include_border=False):
     sca = None
     for i_sca in wcs_dict:
         wcs = wcs_dict[i_sca]
-        image_pos = wcs.toImage(world_pos)
+        try:
+            image_pos = wcs.toImage(world_pos)
+        except GalSimError:
+            # A detector's fitted distortion need not be invertible far outside
+            # that detector. A source on another SCA can lie in this extrapolated
+            # region; continue checking the remaining detectors.
+            continue
         if bounds_list[i_sca].includes(image_pos):
             sca = i_sca
             break
@@ -386,32 +394,30 @@ def _calculate_minmax_pix(include_border=False):
         # group together those that are forced to be the same.
         #
         # We figure out the borders based on the FPA coordinates, but when we apply the
-        # adjustments to min/max x/y, we take into account the orientations of the SCAs.
-        # cf. mapping_v210503.pdf in the devel/roman directory.
+        # adjustments to min/max x/y, we use science coordinates where +x is FPA -x.
         #
-        # Positive side of 1/2/3, same as negative side of 10/11/12
+        # Negative side of 1/2/3, same as positive side of 10/11/12
         border_mm = (sca_xc_mm[10]-sca_xc_mm[1])-n_pix*pixel_size_mm
         # assert statement help ensure that these pairings continue to work if positions
         # are updated in the future.
         assert 0 < border_mm < 5
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        max_x_pix[ [3,10,11] ] += half_border_pix
-        min_x_pix[ [1,2,12] ] -= half_border_pix
+        max_x_pix[ [10,11,12] ] += half_border_pix
+        min_x_pix[ [1,2,3] ] -= half_border_pix
 
-        # Negative side of 1/2/3 and 13/14/15, same as positive side of 4/5/6 and 10/11/12
+        # Positive side of 1/2/3 and 13/14/15, same as negative side of 4/5/6 and 10/11/12 in science coordinate
         border_mm = (sca_xc_mm[1]-sca_xc_mm[4])-n_pix*pixel_size_mm
         assert 0 < border_mm < 5
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        min_x_pix[ [3,4,5,10,11,15] ] -= half_border_pix
-        max_x_pix[ [1,2,6,12,13,14] ] += half_border_pix
+        min_x_pix[ [4,5,6,10,11,12] ] -= half_border_pix
+        max_x_pix[ [1,2,3,13,14,15] ] += half_border_pix
 
-        # Negative side of 4/5/6 and 16/17/18, same as positive side of 7/8/9 and 13/14/15
-        # Also add this same chip gap to the outside chips.  Neg side of 7/8/9, pos 16/17/18.
+        # Positive side of 4/5/6 and 16/17/18, same as negative side of 7/8/9 and 13/14/15
         border_mm = (sca_xc_mm[4]-sca_xc_mm[7])-n_pix*pixel_size_mm
         assert 0 < border_mm < 5
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        min_x_pix[ [6,7,8,13,14,18] ] -= half_border_pix
-        max_x_pix[ [4,5,9,15,16,17] ] += half_border_pix
+        min_x_pix[ [7,8,9,13,14,15] ] -= half_border_pix
+        max_x_pix[ [4,5,6,16,17,18] ] += half_border_pix
 
         # In the vertical direction, the gaps vary, with the gap between one pair of rows being
         # significantly larger than between the other pair of rows.  The reason for this has to do
@@ -429,16 +435,16 @@ def _calculate_minmax_pix(include_border=False):
         list_1 = np.arange(1,18,3)
         list_2 = list_1 + 1
         list_3 = list_1 + 2
-        max_y_pix[list_1] += half_border_pix
-        min_y_pix[list_2] -= half_border_pix
         min_y_pix[list_1] -= half_border_pix
+        max_y_pix[list_2] += half_border_pix
+        max_y_pix[list_1] += half_border_pix
 
         # Top of 3/6/9/12/15/18, same as bottom of 2/5/8/11/14/17.
         # Also use this for bottom of bottom row: 3/6/9/12/15/18.
         border_mm = (sca_yc_mm[2]-sca_yc_mm[3])-n_pix*pixel_size_mm
         assert border_mm < 10
         half_border_pix = int(0.5*border_mm / pixel_size_mm)
-        max_y_pix[list_2] += half_border_pix
+        min_y_pix[list_2] -= half_border_pix
         min_y_pix[list_3] -= half_border_pix
         max_y_pix[list_3] += half_border_pix
 
@@ -455,8 +461,8 @@ def _populate_required_fields(header):
         ('A_ORDER', 4),
         ('B_ORDER', 4),
         ('WCSNAME', 'wfiwcs_'+optics_design_ver+'_'+prog_version),
-        ('CRPIX1', n_pix/2, "x-coordinate of reference pixel"),
-        ('CRPIX2', n_pix/2, "y-coordinate of reference pixel"),
+        ('CRPIX1', (n_pix+1)/2, "x-coordinate of reference pixel"),
+        ('CRPIX2', (n_pix+1)/2, "y-coordinate of reference pixel"),
         ('CTYPE1', "RA---TAN-SIP", "coordinate type for the first axis"),
         ('CTYPE2', "DEC--TAN-SIP", "coordinate type for the second axis"),
         ('SIMPLE', 'True'),
