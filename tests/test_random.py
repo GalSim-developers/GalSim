@@ -2023,5 +2023,34 @@ def test_numpy_generator():
     assert np.isclose(np.mean(a3), 17, rtol=1.e-3)
     assert np.isclose(np.std(a3), 23, rtol=3.e-3)
 
+@timer
+def test_generate_in_place():
+    """Check that the generate methods only copy back when they have to.
+
+    np.ascontiguousarray returns a view of a contiguous float array, but its .data buffer
+    object can still compare unequal to the original's, which used to cause a redundant copy.
+    """
+    from unittest import mock
+
+    def check(deviate, method, array, copies):
+        expected = array.copy()
+        getattr(deviate.duplicate(), method)(expected)
+        with mock.patch("galsim.random.np.copyto", wraps=np.copyto) as copyto:
+            getattr(deviate, method)(array)
+        assert copyto.call_count == copies
+        np.testing.assert_array_equal(array, expected)
+
+    for shape in [(10,), (10, 20), (10, 20, 30)]:
+        # Contiguous float arrays are filled in place, without a copy.
+        check(galsim.UniformDeviate(1234), "generate", np.zeros(shape), 0)
+        check(galsim.UniformDeviate(1234), "add_generate", np.ones(shape), 0)
+        check(galsim.GaussianDeviate(1234), "generate_from_variance", np.full(shape, 2.), 0)
+        check(galsim.PoissonDeviate(1234), "generate_from_expectation", np.full(shape, 3.), 0)
+
+        # Arrays that ascontiguousarray has to copy still get the values copied back.
+        check(galsim.UniformDeviate(1234), "generate", np.zeros(shape, dtype=np.float32), 1)
+        check(galsim.UniformDeviate(1234), "add_generate", np.ones(shape, order="F")[..., ::2], 1)
+
+
 if __name__ == "__main__":
     runtests(__file__)
