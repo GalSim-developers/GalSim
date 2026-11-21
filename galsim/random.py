@@ -266,7 +266,7 @@ class BaseDeviate:
         #assert(array_1d.strides[0] == array_1d.itemsize)
         _a = array_1d.__array_interface__['data'][0]
         self._rng.generate(len(array_1d), _a)
-        if array_1d.data != array.data:
+        if not np.shares_memory(array, array_1d):
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
 
@@ -277,7 +277,7 @@ class BaseDeviate:
         #assert(array_1d.strides[0] == array_1d.itemsize)
         _a = array_1d.__array_interface__['data'][0]
         self._rng.add_generate(len(array_1d), _a)
-        if array_1d.data != array.data:
+        if not np.shares_memory(array, array_1d):
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
 
@@ -401,7 +401,7 @@ class GaussianDeviate(BaseDeviate):
         #assert(array_1d.strides[0] == array_1d.itemsize)
         _a = array_1d.__array_interface__['data'][0]
         self._rng.generate_from_variance(len(array_1d), _a)
-        if array_1d.data != array.data:
+        if not np.shares_memory(array, array_1d):
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
 
@@ -521,7 +521,7 @@ class PoissonDeviate(BaseDeviate):
         #assert(array_1d.strides[0] == array_1d.itemsize)
         _a = array_1d.__array_interface__['data'][0]
         self._rng.generate_from_expectation(len(array_1d), _a)
-        if array_1d.data != array.data:
+        if not np.shares_memory(array, array_1d):
             # array_1d is not a view into the original array.  Need to copy back.
             np.copyto(array, array_1d.reshape(array.shape), casting='unsafe')
 
