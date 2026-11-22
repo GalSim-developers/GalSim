@@ -2050,6 +2050,8 @@ def test_generate_in_place():
         # Arrays that ascontiguousarray has to copy still get the values copied back.
         check(galsim.UniformDeviate(1234), "generate", np.zeros(shape, dtype=np.float32), 1)
         check(galsim.UniformDeviate(1234), "add_generate", np.ones(shape, order="F")[..., ::2], 1)
+        check(galsim.GaussianDeviate(1234), "generate_from_variance", np.full(shape, 2.)[..., ::-1], 1)
+        check(galsim.PoissonDeviate(1234), "generate_from_expectation", np.full(shape, 3.)[5:9:2,...], 1)
 
 
 if __name__ == "__main__":
