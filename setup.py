@@ -768,7 +768,7 @@ def parallel_compile(self, sources, output_dir=None, macros=None,
     return objects
 
 
-def fix_compiler(compiler, njobs):
+def fix_compiler(compiler, njobs, build_clib_dir):
     # Remove any -Wstrict-prototypes in the compiler flags (since invalid for C++)
     try:
         compiler.compiler_so.remove("-Wstrict-prototypes")
@@ -856,18 +856,22 @@ def fix_compiler(compiler, njobs):
     # Otherwise the wrong library can be linked, which leads to errors.
     # So, make sure that the -Lbuild/... directive happens first among any -L directives in
     # the link flags.
-    linker_so = compiler.linker_so
-    # Find the first -L flag among the current flags (if any)
-    for i, flag in enumerate(linker_so):
-        if flag.startswith('-L'):
-            print('Found link: ',i,flag)
-            break
-    else:
-        i = len(linker_so)
-    # Insert -Llib for any libs that are in build directory, to make sure they are first.
-    linker_so[i:i] = ['-L' + l for l in compiler.library_dirs if l.startswith('build')]
-    # Copy this list back to the compiler object
-    compiler.set_executable('linker_so', linker_so)
+    # Recent setuptools has a separate linker command for C++ shared libraries.
+    for command in ('linker_so', 'linker_so_cxx'):
+        if not hasattr(compiler, command):
+            continue
+        linker_so = list(getattr(compiler, command))
+        # Find the first -L flag among the current flags (if any)
+        for i, flag in enumerate(linker_so):
+            if flag.startswith('-L'):
+                print('Found link: ',i,flag)
+                break
+        else:
+            i = len(linker_so)
+        # Insert -Llib for any libs that are in build directory, to make sure they are first.
+        linker_so[i:i] = ['-L' + build_clib_dir]
+        # Copy this list back to the compiler object
+        compiler.set_executable(command, linker_so)
 
     # Return the extra cflags, since those will be added to the build step in a different place.
     print('Using extra flags ',extra_cflags)
@@ -984,7 +988,7 @@ class my_build_clib(build_clib):
         build_ext = self.distribution.get_command_obj('build_ext')
         njobs = parse_njobs(self.njobs, 'compiling', 'install')
 
-        cflags, lflags = fix_compiler(self.compiler, njobs)
+        cflags, lflags = fix_compiler(self.compiler, njobs, self.build_clib)
 
         # Add the appropriate extra flags for that compiler.
         for (lib_name, build_info) in libraries:
@@ -1010,7 +1014,7 @@ class my_build_shared_clib(my_build_clib):
         from distutils.ccompiler import CCompiler
 
         builder = self.distribution.get_command_obj('build_ext')
-        cflags, lflags = fix_compiler(self.compiler, 1)
+        cflags, lflags = fix_compiler(self.compiler, 1, self.build_clib)
 
         # Most of this is the setuptools version of the build_libraries function.
         # We just change the final link command to build a shared library that can be linked
@@ -1146,11 +1150,12 @@ class my_build_shared_clib(my_build_clib):
             lib_name_with_dir = os.path.join(output_dir, lib_name)
             print('Versioned library: ',full_lib_name_with_dir)
             print('Un-versioned library: ',lib_name_with_dir)
-            if not os.path.exists(lib_name_with_dir):
-                # This is slightly confusing.
-                # The target needs the dir, but the source cannot include the dir or it
-                # will try to link to build/shared_clib/build/shared_clib/libgalsim...
-                os.symlink(full_lib_name, lib_name_with_dir)
+            if os.path.lexists(lib_name_with_dir):
+                os.unlink(lib_name_with_dir)
+            # This is slightly confusing.
+            # The target needs the dir, but the source cannot include the dir or it
+            # will try to link to build/shared_clib/build/shared_clib/libgalsim...
+            os.symlink(full_lib_name, lib_name_with_dir)
 
 
 
@@ -1177,7 +1182,8 @@ class my_build_ext(build_ext):
     def build_extensions(self):
 
         njobs = parse_njobs(self.njobs, 'compiling', 'install')
-        cflags, lflags = fix_compiler(self.compiler, njobs)
+        build_clib_dir = self.get_finalized_command('build_clib').build_clib
+        cflags, lflags = fix_compiler(self.compiler, njobs, build_clib_dir)
 
         # Add the appropriate extra flags for that compiler.
         for e in self.extensions:
@@ -1242,7 +1248,8 @@ class my_run_cpp_test(my_build_ext):
     def run(self):
         builder = self.distribution.get_command_obj('build_ext')
         compiler = builder.compiler
-        cflags, lflags = fix_compiler(compiler, 1)
+        build_clib_dir = self.get_finalized_command('build_clib').build_clib
+        cflags, lflags = fix_compiler(compiler, 1, build_clib_dir)
 
         ext = builder.extensions[0]
         objects = compiler.compile(test_sources,
@@ -1262,7 +1269,7 @@ class my_run_cpp_test(my_build_ext):
 
         # Use the shared library when building the c++ executables to make sure it works.
         self.run_command("build_shared_clib")
-        library_dirs.append('build/shared_clib')
+        library_dirs.insert(0, 'build/shared_clib')
 
         # Check for conda libraries that might host OpenMP
         env = dict(os.environ)
