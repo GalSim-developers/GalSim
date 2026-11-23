@@ -335,7 +335,9 @@ class Sum(GSObject):
             temp = PhotonArray(this_n)
             temp._copyFrom(photons, slice(None), use, do_xy=False, do_flux=False)
             obj._shoot(temp, rng)
-            temp.flux = fluxPerPhoton
+            # Normalize to the sum's photon weight, but keep the sign for profiles that
+            # include negative flux photons.
+            temp.flux = np.copysign(fluxPerPhoton, temp.flux)
             photons._copyFrom(temp, use, slice(None))
 
     def _drawKImage(self, image, jac=None):
