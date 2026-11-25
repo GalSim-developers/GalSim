@@ -369,6 +369,10 @@ class InterpolatedImage(GSObject):
         self._buildRealImage(pad_factor, pad_image, noise_pad_size, noise_pad, rng, use_cache)
         self._image_flux = np.sum(self._image.array, dtype=np.float64)
 
+        # If forcing stepk/maxk, we don't calculate them.
+        if _force_stepk > 0: calculate_stepk = False
+        if _force_maxk > 0: calculate_maxk = False
+
         # I think the only things that will mess up if flux == 0 are the
         # calculateStepK and calculateMaxK functions, and rescaling the flux to some value.
         if (calculate_stepk or calculate_maxk or flux is not None) and self._image_flux == 0.:

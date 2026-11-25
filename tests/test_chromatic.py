@@ -603,7 +603,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
-    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
+    assert_raises(TypeError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
     check_pickle(PSF)
 
     # Check option to not use exact SED
@@ -622,7 +622,7 @@ def test_chromatic_flux():
         err_msg="Drawn ChromaticConvolve flux (interpolated) doesn't match analytic prediction")
     # As an aside, check for appropriate tests of 'integrator' argument.
     assert_raises(ValueError, final_int.drawImage, bandpass, integrator='midp') # minor misspelling
-    assert_raises(ValueError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
+    assert_raises(TypeError, final_int.drawImage, bandpass, integrator=galsim.integ.midptRule)
     check_pickle(PSF)
 
     # Go back to no interpolation (this will effect the PSFs that are used below).
@@ -1759,14 +1759,72 @@ def test_interpolated_ChromaticObject():
     waves = np.linspace(blue_limit, red_limit, n_interp)
     # Make a version that tests the ability of the routine to handle non-sorted / non-array input.
     tricky_waves = list(waves[::-1])
+    # A sparser set will highlight the difference between use_exact_sed=True vs False.
+    sparse_waves = np.linspace(blue_limit, red_limit, 5)
 
-    # Make a star.
+    # Make a star and the exact PSF
     star = galsim.Gaussian(fwhm=1.e-8) * bulge_SED
-
-    # First, compare images that are drawn with exact and interpolated ChromaticGaussian.
     exact_psf = ChromaticGaussian(sigma_0)
-    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
     exact_obj = galsim.Convolve(star, exact_psf)
+
+    # First check the ability to recover a monochromatic profile at specific wavelengths.
+    # At the interpolation wavelengths, evaluateAtWavelength correctly recovers the original
+    # profile at that wavelength regardless of the choice of use_exact_sed.
+    interp_exact = exact_obj.interpolate(sparse_waves, oversample_fac=oversample_fac,
+                                         use_exact_sed=True)
+    interp_linear = exact_obj.interpolate(sparse_waves, oversample_fac=oversample_fac,
+                                          use_exact_sed=False)
+    for wave in sparse_waves:
+        reference = exact_obj.evaluateAtWavelength(wave).drawImage(
+            nx=40, ny=40, scale=scale, dtype=float)
+        for obj in [interp_exact, interp_linear]:
+            mono = obj.evaluateAtWavelength(wave)
+            np.testing.assert_allclose(mono.flux, bulge_SED(wave), atol=0., rtol=2.e-7)
+            image = mono.drawImage(image=reference.copy())
+            np.testing.assert_allclose(image.array, reference.array, atol=1.e-5, rtol=0.)
+
+    # At waves in between the stored wavelengths, use_exact_sed=True preserves the SED's flux,
+    # but the shape is still interpolated, so the image test requires a slightly looser tolerance.
+    # With use_exact_sed=False, the flux is also interpolated and differs from the true SED.
+    for wave in waves:
+        if wave in sparse_waves: continue
+        reference = exact_obj.evaluateAtWavelength(wave).drawImage(
+            nx=40, ny=40, scale=scale, dtype=float)
+        ref_flux = bulge_SED(wave)
+
+        # The use_exact_sed=True case:
+        # This needs a little looser tolerance for the image.
+        mono_exact = interp_exact.evaluateAtWavelength(wave)
+        np.testing.assert_allclose(mono_exact.flux, ref_flux, atol=0., rtol=2.e-7)
+        image_exact = mono_exact.drawImage(image=reference.copy())
+        np.testing.assert_allclose(image_exact.array, reference.array, atol=5.e-4, rtol=0.)
+
+        # The use_exact_sed=False case:
+        # This needs much looser tolerance for both the flux and the image.
+        # The flux is especially bad near sharp SED features, which get smoothed over by the
+        # piecewise linear interpolation.
+        mono_linear = interp_linear.evaluateAtWavelength(wave)
+        assert np.abs(mono_linear.flux - ref_flux) > 1.e-6 * ref_flux
+        np.testing.assert_allclose(mono_linear.flux, ref_flux, atol=0., rtol=0.3)
+        image_linear = mono_linear.drawImage(image=reference.copy())
+        np.testing.assert_allclose(image_linear.array, reference.array, atol=2.e-3, rtol=0.)
+
+        # The uncorrected flux follows linear interpolation between the stored SED values.
+        linear_flux = np.interp(wave, sparse_waves, bulge_SED(sparse_waves))
+        np.testing.assert_allclose(mono_linear.flux, linear_flux, atol=0., rtol=1.e-6)
+
+        # The SED correction changes only normalization: both options have the same shape.
+        np.testing.assert_allclose(image_exact.array, image_linear.array * ref_flux / linear_flux,
+                                   atol=1.e-8, rtol=0.)
+
+    # Both options reject evaluation outside the stored wavelength range.
+    for obj in [interp_exact, interp_linear]:
+        assert_raises(galsim.GalSimRangeError, obj.evaluateAtWavelength, blue_limit - 1.)
+        assert_raises(galsim.GalSimRangeError, obj.evaluateAtWavelength, red_limit + 1.)
+
+    # Now compare images that are drawn with exact and interpolated ChromaticGaussian.
+    # From here, we'll use the denser waves for increased precision.
+    interp_psf = exact_psf.interpolate(waves, oversample_fac=oversample_fac)
     interp_obj = galsim.Convolve(star, interp_psf)
     im_exact = exact_obj.drawImage(bandpass, scale=scale, nx=40, ny=40)
     im_interp = im_exact.copy()
@@ -1805,6 +1863,15 @@ def test_interpolated_ChromaticObject():
     np.testing.assert_allclose(
         kim_interp.array, kim_exact.array, rtol=0, atol=1e-4*kim_exact.array.real.max(),
         err_msg='Interpolated ChromaticObject results differ for exact vs. interpolated (trapz)')
+
+    # Can also use a ContinuousIntegrator if you want rather than a SampleIntegrator with
+    # one of the above rules. (Sample is implicit when using the names as above.)
+    source = interp_psf * bulge_SED
+    integrator = galsim.integ.ContinuousIntegrator(galsim.integ.quadRule, N=4)
+    drawn = source.drawImage(bandpass, image=im_exact.copy(), integrator=integrator)
+    reference = galsim.ChromaticObject.drawImage(
+        source, bandpass, image=im_exact.copy(), integrator=integrator)
+    np.testing.assert_allclose(drawn.array, reference.array, atol=1.e-4, rtol=0.)
 
     # Check that we can turn interpolation off and on at will.
     other_psf = interp_psf.deinterpolated
@@ -2108,6 +2175,7 @@ def test_ChromaticOpticalPSF(run_slow):
     # this unit test, we use an interpolated version only.  The tests of
     # ChromaticObject in the previous unit test should be enough to ensure that exact
     # and interpolated evaluation match in general (given reasonable settings).
+    # Edit: This isn't really true anymore, but continue to use the interpolated version anyway.
 
     # First, compare the interpolated result with saved, exact results.
     # Note that if the saved results file cannot be found, then this function will (slowly)
@@ -2160,22 +2228,14 @@ def test_ChromaticOpticalPSF(run_slow):
         galsim.ChromaticOpticalPSF(lam=lam, diam=diam, aper=psf2._aper, obscuration=0.3)
 
     # We will compare to this reference image below.  Make it if it doesn't exist yet.
+    # This used to take a long time to make, but now it's pretty fast (<2 seconds to make), so
+    # just make it on demand if it doesn't exist rather than store it in the repo.
+    # The interpolated version is still a lot faster, especially for repeated usage.
     if not os.path.isfile(os.path.join(refdir, 'r_exact.fits')):
-        import warnings
-        warnings.warn("Could not find file r_exact.fits, so generating it from scratch.  This "
-                      "should only happen if you intentionally deleted the file in order to "
-                      "regenerate it!")
-
-        # Generate exact results inside this if-block.
-        # This block took ~30 seconds to run on a ~2016 Macbook Pro, nearly all in the image
-        # rendering process.  In contrast, the ChromaticOpticalPSF with interpolation that is used
-        # for this unit test takes about ~9 seconds to initialize, and ~1s for the image rendering
-        # process.  Obviously, if many images are to be rendered after incurring the overhead of
-        # initializing this object, the interpolated calculation leads to a huge savings compared to
-        # doing the exact calculation each time.
         t2 = time.time()
         obj = galsim.Convolve(star, psf)
-        im_r_ref = obj.drawImage(bandpass, scale=scale)
+        # Use iimult=2 for better accuracy on this "exact" version.
+        im_r_ref = obj.drawImage(bandpass, scale=scale, iimult=2)
         im_r_ref.write(os.path.join(refdir, 'r_exact.fits'))
         t3 = time.time()
         print("Time to draw ChromaticOpticalPSF: {0}s".format(t3-t2))
@@ -2408,9 +2468,8 @@ def test_phot(run_slow):
             t0 = time.time()
             # This is the old way that photon shooting used to work.  The new way will be tested
             # below.  But since it now uses photon_ops, we'll wait to test that last.
-            effective_psf = galsim.ChromaticConvolution._get_effective_prof(
-                    psf*gal.sed, bandpass, integrator='trapezoidal', gsparams=psf.gsparams,
-                    iimult=None)
+            effective_psf = (psf*gal.sed)._get_effective_prof(
+                    bandpass, integrator='trapezoidal', gsparams=psf.gsparams, iimult=None)
             temp_obj = galsim.Convolve(gal_achrom/flux,effective_psf)
             im2 = temp_obj.drawImage(image=im1.copy(), method='phot', rng=rng)
             t1 = time.time()
@@ -2525,6 +2584,125 @@ def test_low_flux_phot():
     image = observed.drawImage(nx=53, ny=53, bandpass=bandpass, method="phot", rng=rng)
     np.testing.assert_array_equal(image.array, 0.)
 
+@timer
+def test_chromatic_zero_flux():
+    """Test drawing a chromatic object with zero total flux, but not a zero image.
+
+    This shows up in practice in Piff when we make images that are the derivative of a
+    profile. They have + and - parts, but the spatial integral is 0.
+    """
+    # A difference of normalized Gaussians has zero flux and a nonzero spatial profile.
+    bp = bandpass  # LSST r-band throughput loaded from LSST_r.dat above.
+    waves = bp.wave_list
+    sed = galsim.SED('(wave/600)**2', 'nm', 'fphotons').withFlux(1., bp)
+    psf = galsim.ChromaticObject(galsim.Gaussian(sigma=0.4)).dilate(lambda w: w/600.)
+
+    # Use two different compensated kernels.
+    # One is a Mexican hat pattern of a wide Gaussian minus a narrow one.
+    plus1 = galsim.Gaussian(sigma=0.25)
+    minus1 = galsim.Gaussian(sigma=0.20)
+
+    # The other uses two identical Gaussians, shifted in opposite directions.
+    # This one renders with exactly zero flux to make sure that doesn't fail.
+    plus2 = plus1.shift(0.1,0)
+    minus2 = plus1.shift(-0.1,0)
+
+    for plus, minus in ((plus1,minus1), (plus2,minus2)):
+        kernel = plus - minus
+        assert kernel.flux == 0.
+
+        # Check that drawing the combined kernel is equivalent to the difference of the images
+        # you get from drawing plus and minus separately.
+        # Include putting a shift in, since zero-flux components don't have a measurable centroid,
+        # so make sure the code is insensitive to that.
+        for shift in [(0., 0.), (0.17, -0.23)]:
+            # First the simple separable case kernel * sed.
+            image = (kernel * sed).shift(shift).drawImage(bp, nx=96, ny=96, scale=0.1, dtype=float)
+            reference = (plus * sed).shift(shift).drawImage(bp, image=image.copy())
+            reference -= (minus * sed).shift(shift).drawImage(bp, image=image.copy())
+            assert np.max(np.abs(image.array)) > 5.e-4
+            np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+            assert abs(image.array.sum()) < 1.e-10
+
+            # Also check as a sum of chromatic objects. I.e. apply sed to plus and minus separately.
+            # This is still separable, since the seds are equal.
+            (plus*sed - minus*sed).shift(shift).drawImage(bp, image=image)
+            assert np.max(np.abs(image.array)) > 1.e-3
+            np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+            assert abs(image.array.sum()) < 1.e-10
+
+            # Check convolving the kernel by an inseparable component.
+            obj = (galsim.Convolve(psf, kernel) * sed).shift(*shift)
+            obj.drawImage(bp, image=image)
+            reference = (galsim.Convolve(psf, plus) * sed).shift(*shift).drawImage(
+                bp, image=image.copy())
+            reference -= (galsim.Convolve(psf, minus) * sed).shift(*shift).drawImage(
+                bp, image=image.copy())
+            assert np.max(np.abs(image.array)) > 1.e-4
+            np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+            assert abs(image.array.sum()) < 1.e-8
+
+            # Check drawKImage similarly.
+            image = (kernel * sed).shift(*shift).drawKImage(bp, nx=33, ny=33, scale=0.1)
+            reference = (plus * sed).shift(*shift).drawKImage(bp, image=image.copy())
+            reference -= (minus * sed).shift(*shift).drawKImage(bp, image=image.copy())
+            np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+            assert abs(image(0, 0)) < 1.e-10
+
+            # And with the psf convolution.
+            image = (galsim.Convolve(psf, kernel) * sed).shift(*shift).drawKImage(
+                bp, image=image.copy())
+            reference = (galsim.Convolve(psf, plus) * sed).shift(*shift).drawKImage(
+                bp, image=image.copy())
+            reference -= (galsim.Convolve(psf, minus) * sed).shift(*shift).drawKImage(
+                bp, image=image.copy())
+            np.testing.assert_allclose(image.array, reference.array, atol=1.e-10, rtol=0.)
+            assert abs(image(0, 0)) < 1.e-10
+
+        # Check that drawing a convolution where the inseparable part has zero flux also works.
+        # A wavelength-dependent dilation makes the signed profile and its two parts inseparable.
+        kernel2 = galsim.ChromaticObject(kernel).dilate(lambda w: w/600.) * sed
+        plus2 = galsim.ChromaticObject(plus).dilate(lambda w: w/600.) * sed
+        minus2 = galsim.ChromaticObject(minus).dilate(lambda w: w/600.) * sed
+        blur = galsim.Gaussian(sigma=0.2)
+        image = galsim.Convolve(kernel2, blur).drawImage(bp, nx=96, ny=96, scale=0.1, dtype=float)
+        reference = galsim.Convolve(plus2, blur).drawImage(bp, image=image.copy())
+        reference -= galsim.Convolve(minus2, blur).drawImage(bp, image=image.copy())
+        assert np.max(np.abs(image.array)) > 1.e-4
+        assert abs(image.array.sum()) < 1.e-7
+        np.testing.assert_allclose(image.array, reference.array, atol=1.e-6, rtol=0.)
+
+        # Interpolating the signed profile also agrees with interpolating and drawing its parts.
+        kernel3 = kernel2.interpolate(waves)
+        plus3 = plus2.interpolate(waves)
+        minus3 = minus2.interpolate(waves)
+        image = galsim.Convolve(kernel3, blur).drawImage(bp, image=image.copy())
+        reference = galsim.Convolve(plus3, blur).drawImage(bp, image=image.copy())
+        reference -= galsim.Convolve(minus3, blur).drawImage(bp, image=image.copy())
+        assert np.max(np.abs(image.array)) > 1.e-4
+        assert abs(image.array.sum()) < 2.e-7
+        # The intermediate images use slightly different sizes and scales in the two cases,
+        # so the tolerance here isn't quite as low as other tests.
+        np.testing.assert_allclose(image.array, reference.array, atol=2.e-5, rtol=0.)
+
+        # Shearing and shifting the interpolated profiles preserve the same equivalence.
+        kernel4 = kernel3.shear(g1=0.1, g2=0.05).shift(0.13, -0.19)
+        plus4 = plus3.shear(g1=0.1, g2=0.05).shift(0.13, -0.19)
+        minus4 = minus3.shear(g1=0.1, g2=0.05).shift(0.13, -0.19)
+        image = galsim.Convolve(kernel4, blur).drawImage(bp, image=image.copy())
+        reference = galsim.Convolve(plus4, blur).drawImage(bp, image=image.copy())
+        reference -= galsim.Convolve(minus4, blur).drawImage(bp, image=image.copy())
+        assert np.max(np.abs(image.array)) > 1.e-4
+        assert abs(image.array.sum()) < 2.e-7
+        np.testing.assert_allclose(image.array, reference.array, atol=2.e-5, rtol=0.)
+
+    # If the sed itself is completely zero, that doesn't work.
+    zero_sed = galsim.SED('0', 'nm', 'fphotons')
+    for obj in [kernel * zero_sed, galsim.Convolve(psf, kernel) * zero_sed]:
+        with assert_raises(galsim.GalSimError):
+            obj.drawImage(bp, nx=32, ny=32, scale=0.1)
+        with assert_raises(galsim.GalSimError):
+            obj.drawKImage(bp, nx=33, ny=33, scale=0.2)
 
 @timer
 def test_chromatic_fiducial_wavelength():
@@ -2673,6 +2851,9 @@ def check_chromatic_invariant(obj, bps=None, waves=None):
                 obj.evaluateAtWavelength(wave).drawImage().array.sum(dtype=float),
                 desired,
                 rtol=1e-2)
+
+        # Check invariant that sed = ref_sed * ref_flux.
+        np.testing.assert_allclose(obj.ref_sed(wave)*obj.ref_flux, desired)
 
     if obj.sed.spectral:
         for bp in bps:

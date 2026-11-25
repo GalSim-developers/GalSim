@@ -124,6 +124,15 @@ class ChromaticObject:
     (though note that the new object's `SED` may not be equal to the SED being multiplied by since
     the original ChromaticObject may not have had unit normalization.)
 
+    .. note::
+        The ``sed`` property of a ChromaticObject always includes the full normalization so that
+        ``obj.sed(wave)`` gives the flux of the object at that wavelength (where wave is in nm).
+        We allow objects to have zero flux without being trivially zero though. In such cases,
+        it may be useful to separate the underlying wavelength dependence from the flux
+        normalization. For such cases, you may use ``obj.ref_sed`` and ``obj.ref_flux``
+        where ``obj.sed = obj.ref_sed * obj.ref_flux``. The latter is a wavelength-independent
+        scalar, which is allowed to be zero.
+
     **Methods**:
 
     `evaluateAtWavelength` returns the monochromatic surface brightness profile (as a `GSObject`)
@@ -164,6 +173,8 @@ class ChromaticObject:
     #   InterpolatedChromaticObject.
     # - .spectral indicates obj.sed.spectral
     # - .dimensionless indicates obj.sed.dimensionless
+    # - obj.sed(lam) == obj.ref_sed(lam) * obj.ref_flux, where ref_flux is wavelength independent.
+    #   Unlike sed, ref_sed can remain nonzero for a signed profile with zero spatial integral.
 
     def __init__(self, obj):
         self._obj = obj
@@ -177,6 +188,28 @@ class ChromaticObject:
     @property
     def sed(self):
         return self._obj.sed
+
+    @property
+    def ref_sed(self):
+        """A reference `SED` with ``sed = ref_sed * ref_flux``.
+        """
+        if type(self) is ChromaticObject:
+            # For directly construction ChromaticObject(obj)
+            return self._obj.ref_sed
+        else:
+            # The base class default whne not overridden by a subclass
+            return self.sed
+
+    @property
+    def ref_flux(self):
+        """A reference flux value scaling ref_sed to give the total sed.
+        """
+        if type(self) is ChromaticObject:
+            # For directly construction ChromaticObject(obj)
+            return self._obj.ref_flux
+        else:
+            # The base class default whne not overridden by a subclass
+            return 1.
 
     @property
     def SED(self):
@@ -241,7 +274,7 @@ class ChromaticObject:
         """
         bpwave = bandpass.effective_wavelength
         bpwave, prof0 = self._approxWavelength(bpwave)
-        if prof0.flux != 0:
+        if self.ref_sed(bpwave) != 0:
             return bpwave, prof0
 
         candidate_waves = np.concatenate(
@@ -253,7 +286,7 @@ class ChromaticObject:
         for w in candidate_waves:
             if bandpass.blue_limit <= w <= bandpass.red_limit:
                 prof0 = self.evaluateAtWavelength(w)
-                if prof0.flux != 0:
+                if self.ref_sed(w) != 0:
                     return w, prof0
 
         raise GalSimError("Could not locate fiducial wavelength where SED * Bandpass is nonzero.")
@@ -383,8 +416,7 @@ class ChromaticObject:
         """
         return self.sed.dimensionless
 
-    @staticmethod
-    def _get_integrator(integrator, wave_list):
+    def _get_integrator(self, integrator, wave_list, bandpass):
         # Decide on integrator.  If the user passed one of the integrators from galsim.integ, that's
         # fine.  Otherwise we decide based on the adopted integration rule and the presence/absence
         # of `wave_list`.
@@ -404,7 +436,58 @@ class ChromaticObject:
                 integrator = integ.ContinuousIntegrator(rule)
         if not isinstance(integrator, integ.ImageIntegrator):
             raise TypeError("Invalid type passed in for integrator!")
-        return integrator
+
+        # Merge self.wave_list into bandpass.wave_list if using a sampling integrator
+        if isinstance(integrator, integ.SampleIntegrator):
+            if len(wave_list) < 2:
+                raise GalSimIncompatibleValuesError(
+                    "Cannot use SampleIntegrator when Bandpass and SED are both analytic.",
+                    integrator=integrator, bandpass=bandpass, sed=self.sed)
+            bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
+        return integrator, bandpass
+
+    def _get_effective_prof(self, bandpass, iimult, integrator, gsparams, flux_ratio=None):
+        """Integrate this profile with an additional SED weight supplied by outer transformations."""
+        obj = self if flux_ratio is None else self * flux_ratio
+        # Get the actual integrator object, and maybe adjust the bandpass if necessary.
+        wave_list, _, _ = utilities.combine_wave_list(obj, bandpass)
+        integrator, bandpass = obj._get_integrator(integrator, wave_list, bandpass)
+
+        # Evaluate the profiles at the wave values where the integrator will need them.
+        # We save them here in a dict, so we can use this in the integrator, but also
+        # get the stepk/maxk values to set the image size and scale appropriately.
+        profile_dict = {wave: obj.evaluateAtWavelength(wave)
+                        for wave in integrator.calculateWaves(bandpass)}
+        profiles = profile_dict.values()
+
+        # Determine stepk, maxk the normal way we do this for sums so we can force
+        # them when making the InterpolatedImage. In addition to the efficiency benefit of
+        # saving the calls to calculateStepK and calculateMaxK, this is required if the
+        # obj has zero flux, since those cannot calculate either value from the image.
+        prof0 = min(profiles, key=lambda prof: prof.stepk) # We use prof0 again below.
+        stepk = prof0.stepk
+        maxk = max(prof.maxk for prof in profiles)
+        iiscale = math.pi / maxk
+        iiscale /= 2  # This seems to be required to make test_monochromatic_sed to pass.
+                      # Not sure why, since I thought straight nyquist should be good enough.
+                      # But if it's needed there, it's probably worth always doing, rather than
+                      # having that test use iimult=2.  And definitions of Nyquist are somewhat
+                      # confusing, so it's possible that we should expect to need a factor of
+                      # 2 smaller than nyquist for the pixel scale.  :-S
+        if iimult is not None:
+            iiscale /= iimult
+
+        # Set up the image using the one with the smallest stepk (needing the largest image).
+        image = prof0.drawImage(scale=iiscale, method='no_pixel', setup_only=True)
+
+        # The dict __getitem__ function acts like a function of wavelength returning profiles,
+        # which is what the integrator needs.
+        effective_prof_image = integrator(profile_dict.__getitem__, bandpass, image,
+                                          {'method': 'no_pixel'})
+
+        # Use the calculated stepk, maxk directly here.
+        return InterpolatedImage(effective_prof_image, gsparams=gsparams,
+                                 _force_stepk=stepk, _force_maxk=maxk)
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Base implementation for drawing an image of a `ChromaticObject`.
@@ -465,12 +548,12 @@ class ChromaticObject:
         if self.sed.dimensionless:
             raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
 
-        # setup output image using fiducial profile
+        # Setup output image using fiducial profile
         wave0, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
 
-        # determine combined self.wave_list and bandpass.wave_list
+        # Determine combined self.wave_list and bandpass.wave_list
         wave_list, _, _ = utilities.combine_wave_list(self, bandpass)
 
         # If there are photon ops, they'll probably need valid wavelengths, so add
@@ -481,8 +564,8 @@ class ChromaticObject:
             kwargs['photon_ops'] = [wave_sampler] + kwargs['photon_ops']
 
         if self.separable:
-            multiplier = ChromaticObject._multiplier_cache(self.sed, bandpass, tuple(wave_list))
-            prof0 *= multiplier/self.sed(wave0)
+            multiplier = ChromaticObject._multiplier_cache(self.ref_sed, bandpass, tuple(wave_list))
+            prof0 *= multiplier/self.ref_sed(wave0)
             image = prof0.drawImage(image=image, **kwargs)
             return image
 
@@ -494,15 +577,8 @@ class ChromaticObject:
         # specialize something in the subclass's drawImage method.
         assert kwargs.get('method', None) != 'phot'
 
-        integrator = self._get_integrator(integrator, wave_list)
-
-        # merge self.wave_list into bandpass.wave_list if using a sampling integrator
-        if isinstance(integrator, integ.SampleIntegrator):
-            if len(wave_list) < 2:
-                raise GalSimIncompatibleValuesError(
-                    "Cannot use SampleIntegrator when Bandpass and SED are both analytic.",
-                    integrator=integrator, bandpass=bandpass, sed=self.sed)
-            bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
+        # Get the actual integrator object, and maybe adjust the bandpass if necessary.
+        integrator, bandpass = self._get_integrator(integrator, wave_list, bandpass)
 
         add_to_image = kwargs.pop('add_to_image', False)
         integral = integrator(self.evaluateAtWavelength, bandpass, image, kwargs)
@@ -554,25 +630,22 @@ class ChromaticObject:
         if self.sed.dimensionless:
             raise GalSimSEDError("Can only drawK ChromaticObjects with spectral SEDs.", self.sed)
 
-        # setup output image (semi-arbitrarily using the bandpass effective wavelength)
-        prof0 = self.evaluateAtWavelength(bandpass.effective_wavelength)
+        # Setup output image using fiducial profile
+        wave0, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawKImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
 
-        # determine combined self.wave_list and bandpass.wave_list
+        # Determine combined self.wave_list and bandpass.wave_list
         wave_list, _ , _ = utilities.combine_wave_list(self, bandpass)
 
         if self.separable:
-            multiplier = ChromaticObject._multiplier_cache(self.sed, bandpass, tuple(wave_list))
-            prof0 *= multiplier/self.sed(bandpass.effective_wavelength)
+            multiplier = ChromaticObject._multiplier_cache(self.ref_sed, bandpass, tuple(wave_list))
+            prof0 *= multiplier/self.ref_sed(wave0)
             image = prof0.drawKImage(image=image, **kwargs)
             return image
 
-        integrator = self._get_integrator(integrator, wave_list)
-
-        # merge self.wave_list into bandpass.wave_list if using a sampling integrator
-        if isinstance(integrator, integ.SampleIntegrator):
-            bandpass = Bandpass(_LookupTable(wave_list, bandpass(wave_list), 'linear'), 'nm')
+        # Get the actual integrator object, and maybe adjust the bandpass if necessary.
+        integrator, bandpass = self._get_integrator(integrator, wave_list, bandpass)
 
         add_to_image = kwargs.pop('add_to_image', False)
         image_int = integrator(self.evaluateAtWavelength, bandpass, image, kwargs, doK=True)
@@ -1332,6 +1405,14 @@ class InterpolatedChromaticObject(ChromaticObject):
     def sed(self):
         return self.deinterpolated.sed
 
+    @property
+    def ref_sed(self):
+        return self.deinterpolated.ref_sed
+
+    @property
+    def ref_flux(self):
+        return self.deinterpolated.ref_flux
+
     # Note: We don't always need all of these, so only calculate them if needed.
     # E.g. if photon shooting, pretty much only need objs.
     @lazy_property
@@ -1361,10 +1442,6 @@ class InterpolatedChromaticObject(ChromaticObject):
         # Note that `no_pixel` is used (we want the object on its own, without a pixel response).
         return [ obj.drawImage(scale=scale, nx=im_size, ny=im_size, method='no_pixel')
                  for obj in self.objs ]
-
-    @lazy_property
-    def fluxes(self):
-        return [ obj.flux for obj in self.objs ]
 
     @property
     def gsparams(self):
@@ -1431,8 +1508,8 @@ class InterpolatedChromaticObject(ChromaticObject):
 
         # Rescale to use the exact flux or normalization if requested.
         if self.use_exact_sed:
-            interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
-            exact_norm = self.sed(wave)
+            interp_norm = _linearInterp(self.ref_sed(self.waves), frac, lower_idx)
+            exact_norm = self.ref_sed(wave)
             im *= exact_norm/interp_norm
 
         return im, stepk, maxk
@@ -1455,7 +1532,8 @@ class InterpolatedChromaticObject(ChromaticObject):
             the monochromatic object at the given wavelength, as a `GSObject`.
         """
         im, stepk, maxk = self._imageAtWavelength(wave)
-        return InterpolatedImage(im, _force_stepk=stepk, _force_maxk=maxk)
+        return InterpolatedImage(im, gsparams=self.gsparams,
+                                 _force_stepk=stepk, _force_maxk=maxk)
 
     def _shoot(self, photons, rng):
         w = photons.wavelength
@@ -1499,18 +1577,12 @@ class InterpolatedChromaticObject(ChromaticObject):
             temp.scaleFlux(len(temp)/len(photons))
             photons._copyFrom(temp, use, slice(None))
 
+    def _get_effective_prof(self, bandpass, iimult, integrator, gsparams, flux_ratio=None):
+        # Integrate on the stored grid without resampling it.
+        return self._get_interp_image(bandpass, integrator=integrator, _flux_ratio=flux_ratio)
+
     def _get_interp_image(self, bandpass, image=None, integrator='quadratic',
                           _flux_ratio=None, **kwargs):
-        if integrator == 'quadratic':
-            rule = integ.quadRule
-        elif integrator == 'trapezoidal':
-            rule = integ.trapzRule
-        elif integrator == 'midpoint':
-            rule = integ.midptRule
-        else:
-            raise GalSimValueError("Unrecognized integration rule", integrator,
-                                    ('trapezoidal', 'midpoint', 'quadratic'))
-
         if _flux_ratio is None:
             _flux_ratio = lambda w: np.ones_like(w)
         # _flux_ratio might be a constant float.  For simplicity below, turn it into a function.
@@ -1518,7 +1590,7 @@ class InterpolatedChromaticObject(ChromaticObject):
             val = _flux_ratio
             _flux_ratio = lambda w: np.full_like(w, val)
 
-        # setup output image (semi-arbitrarily using the bandpass effective wavelength).
+        # Setup output image using fiducial profile
         # Note: we cannot just use self._imageAtWavelength, because that routine returns an image
         # with whatever pixel scale was required to sample all the images properly.  We want to set
         # up an output image that has the requested pixel scale, which might change the image size
@@ -1532,6 +1604,8 @@ class InterpolatedChromaticObject(ChromaticObject):
         if isinstance(_flux_ratio, SED):
             wave_objs += [_flux_ratio]
         wave_list, _, _ = utilities.combine_wave_list(wave_objs)
+        integrator, bandpass = self._get_integrator(integrator, wave_list, bandpass)
+        wave_list = integrator.calculateWaves(bandpass)
 
         if np.any((wave_list < self.waves[0]) | (wave_list > self.waves[-1])):  # pragma: no cover
             # MJ: I'm pretty sure it's impossible to hit this.
@@ -1541,9 +1615,11 @@ class InterpolatedChromaticObject(ChromaticObject):
                                    bad_waves, self.waves[0], self.waves[-1])
 
         # weights are the weights to use at each of the given wavelengths for the integration.
-        weights = rule.calculateWeights(wave_list, bandpass)
+        weights = integrator.rule.calculateWeights(wave_list, bandpass)
         # im_weights are the weights for the stored images.
         im_weights = np.zeros(len(self.waves))
+        if self.use_exact_sed:
+            ref_sed_vals = self.ref_sed(self.waves)
         for w, wt in zip(wave_list, weights):
             # Find where this is with respect to the wavelengths on which images are stored.
             lower_idx, frac = _findWave(self.waves, w)
@@ -1551,8 +1627,8 @@ class InterpolatedChromaticObject(ChromaticObject):
 
             # Rescale to use the exact flux or normalization if requested.
             if self.use_exact_sed:
-                interp_norm = _linearInterp(self.fluxes, frac, lower_idx)
-                exact_norm = self.sed(w)
+                interp_norm = _linearInterp(ref_sed_vals, frac, lower_idx)
+                exact_norm = self.ref_sed(w)
                 wt *= exact_norm/interp_norm
 
             im_weights[lower_idx] += (1.-frac) * wt * _flux_ratio(w)
@@ -1565,8 +1641,9 @@ class InterpolatedChromaticObject(ChromaticObject):
         stepk = np.average(self.stepk_vals, weights=im_weights)
         maxk = np.average(self.maxk_vals, weights=im_weights)
 
-        # Instantiate the InterpolatedImage, using these conservative stepk and maxk choices.
-        return InterpolatedImage(integral, _force_stepk=stepk, _force_maxk=maxk)
+        # Instantiate the InterpolatedImage, using these stepk and maxk choices.
+        return InterpolatedImage(integral, gsparams=self.gsparams,
+                                 _force_stepk=stepk, _force_maxk=maxk)
 
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """Draw an image as seen through a particular bandpass using the stored interpolated
@@ -1580,8 +1657,7 @@ class InterpolatedChromaticObject(ChromaticObject):
                             integrate.
             image:          Optionally, the `Image` to draw onto.  (See `GSObject.drawImage`
                             for details.)  [default: None]
-            integrator:     The integration algorithm to use, given as a string.  Either
-                            'midpoint', 'trapezoidal', or 'quadratic' is allowed.
+            integrator:     The integration algorithm to use, as for `ChromaticObject.drawImage`.
                             [default: 'quadratic']
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
@@ -1685,6 +1761,14 @@ class ChromaticAtmosphere(ChromaticObject):
     @property
     def sed(self):
         return self.base_obj.sed
+
+    @property
+    def ref_sed(self):
+        return self.base_obj.ref_sed
+
+    @property
+    def ref_flux(self):
+        return self.base_obj.ref_flux
 
     @property
     def gsparams(self):
@@ -1893,7 +1977,15 @@ class ChromaticTransformation(ChromaticObject):
 
     @lazy_property
     def sed(self):
-        sed = self._original.sed * self._flux_ratio
+        return self.ref_sed * self.ref_flux
+
+    @property
+    def ref_flux(self):
+        return self._original.ref_flux
+
+    @lazy_property
+    def ref_sed(self):
+        sed = self._original.ref_sed * self._flux_ratio
 
         if self._redshift is not None:
             sed = sed.atRedshift(self._redshift)
@@ -2017,7 +2109,8 @@ class ChromaticTransformation(ChromaticObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d.pop('sed',None)
+        d.pop('sed', None)
+        d.pop('ref_sed', None)
         return d
 
     def __setstate__(self, d):
@@ -2103,13 +2196,26 @@ class ChromaticTransformation(ChromaticObject):
 
         return ChromaticTransformationPhotonOp(self)
 
+    def _get_effective_prof(self, bandpass, iimult, integrator, gsparams, flux_ratio=None):
+        # If we just have a regular (not chromatic) transformation, we get just apply it again
+        # to the effective profile of the original object.
+        if not self.chromatic and self._redshift is None:
+            flux_ratio = self._flux_ratio if flux_ratio is None else flux_ratio * self._flux_ratio
+            prof = self.original._get_effective_prof(
+                bandpass, iimult, integrator, gsparams, flux_ratio)
+            return transform.Transform(prof, jac=self._jac, offset=_PositionD(*self._offset),
+                                       gsparams=self._gsparams,
+                                       propagate_gsparams=self._propagate_gsparams)
+        else:
+            # Otherwise, use the more general implementation in ChromaticObject.
+            return super()._get_effective_prof(bandpass, iimult, integrator, gsparams, flux_ratio)
+
     def drawImage(self, bandpass, image=None, integrator='quadratic', **kwargs):
         """
         See `ChromaticObject.drawImage` for a full description.
 
-        This version usually just calls that one, but if the transformed object (self.original) is
-        an `InterpolatedChromaticObject`, and the transformation is achromatic, then it will still
-        be able to use the interpolation.
+        This version usually just calls that one, but if the transformed object uses interpolation
+        and the transformation is achromatic, then it will still be able to use the interpolation.
 
         Parameters:
             bandpass:       A `Bandpass` object representing the filter against which to
@@ -2123,9 +2229,6 @@ class ChromaticTransformation(ChromaticObject):
                             or not the object has a ``wave_list``.  [default: 'quadratic',
                             which will try to select an appropriate integrator using the
                             quadratic integration rule automatically.]
-                            If the object being transformed is an `InterpolatedChromaticObject`,
-                            then ``integrator`` can only be a string, either 'midpoint',
-                            'trapezoidal', or 'quadratic'.
             **kwargs:       For all other kwarg options, see `GSObject.drawImage`.
 
         Returns:
@@ -2135,18 +2238,12 @@ class ChromaticTransformation(ChromaticObject):
         self._last_bp = bandpass
         if self.sed.dimensionless:
             raise GalSimSEDError("Can only draw ChromaticObjects with spectral SEDs.", self.sed)
-        if isinstance(self.original, InterpolatedChromaticObject):
-            # Pass self._flux_ratio, which *could* depend on wavelength, to _get_interp_image,
-            # where it will be used to reweight the stored images.
-            int_im = self.original._get_interp_image(bandpass, image=image, integrator=integrator,
-                                                     _flux_ratio=self._flux_ratio, **kwargs)
-            # Get shape transformations at bandpass.red_limit (they are achromatic so it doesn't
-            # matter where you get them).
-            jac, offset, _ = self._getTransformations(bandpass.red_limit)
-            offset = _PositionD(*offset)
-            int_im = transform.Transform(int_im, jac=jac, offset=offset, gsparams=self._gsparams,
-                                         propagate_gsparams=self._propagate_gsparams)
-            image = int_im.drawImage(image=image, **kwargs)
+        if self.interpolated:
+            # Use the wavelengths at which we interpolated the profile rather than draw this at
+            # new wavelengths. The implementation below would be both inefficient and inaccurate
+            # compared to using the interpolation wavelengths.
+            prof = self._get_effective_prof(bandpass, None, integrator, self.gsparams)
+            image = prof.drawImage(image=image, **kwargs)
         elif kwargs.get('method',None) == 'phot':
             # Need to calculate n_photons now using the fiducial profile, not self.original,
             # since the transformation may (often does) change the flux.
@@ -2242,6 +2339,14 @@ class SimpleChromaticTransformation(ChromaticTransformation):
     def sed(self):
         return self._flux_ratio * self.original.flux
 
+    @property
+    def ref_sed(self):
+        return self._flux_ratio
+
+    @property
+    def ref_flux(self):
+        return self.original.flux
+
     def _atRedshift(self, redshift):
         return SimpleChromaticTransformation(self.original, self._flux_ratio.atRedshift(redshift),
                                              self._gsparams, self._propagate_gsparams)
@@ -2263,7 +2368,7 @@ class SimpleChromaticTransformation(ChromaticTransformation):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d.pop('sed',None)
+        d.pop('sed', None)
         return d
 
     def __setstate__(self, d):
@@ -2409,6 +2514,25 @@ class ChromaticSum(ChromaticObject):
             sed += obj.sed
         return sed
 
+    @lazy_property
+    def _all_ref_sed_equal(self):
+        sed = self.obj_list[0].ref_sed
+        return all(obj.ref_sed == sed for obj in self.obj_list[1:])
+
+    @lazy_property
+    def ref_sed(self):
+        if self._all_ref_sed_equal:
+            return self.obj_list[0].ref_sed
+        else:
+            return self.sed
+
+    @lazy_property
+    def ref_flux(self):
+        if self._all_ref_sed_equal:
+            return sum(obj.ref_flux for obj in self.obj_list)
+        else:
+            return 1.
+
     @property
     def gsparams(self):
         """The `GSParams` for this object.
@@ -2455,7 +2579,8 @@ class ChromaticSum(ChromaticObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d.pop('sed',None)
+        d.pop('sed', None)
+        d.pop('ref_sed', None)
         return d
 
     def __setstate__(self, d):
@@ -2727,6 +2852,17 @@ class ChromaticConvolution(ChromaticObject):
             sed *= obj.sed
         return sed
 
+    @lazy_property
+    def ref_sed(self):
+        sed = self.obj_list[0].ref_sed
+        for obj in self.obj_list[1:]:
+            sed *= obj.ref_sed
+        return sed
+
+    @lazy_property
+    def ref_flux(self):
+        return np.prod([obj.ref_flux for obj in self.obj_list])
+
     @property
     def gsparams(self):
         """The `GSParams` for this object.
@@ -2748,35 +2884,6 @@ class ChromaticConvolution(ChromaticObject):
             ret._obj_list = [ obj.withGSParams(ret._gsparams) for obj in self.obj_list ]
         return ret
 
-    @staticmethod
-    def _get_effective_prof(insep_obj, bandpass, iimult, integrator, gsparams):
-        # Find scale at which to draw effective profile
-        # Use smallest nyquist scale among the fiducial profile and at the two limits of the bp.
-        _, prof0 = insep_obj._fiducial_profile(bandpass)
-        prof1 = insep_obj.evaluateAtWavelength(bandpass.red_limit)
-        prof2 = insep_obj.evaluateAtWavelength(bandpass.blue_limit)
-        iiscale = min(prof0.nyquist_scale, prof1.nyquist_scale, prof2.nyquist_scale)
-        iiscale /= 2  # This seems to be required to make test_monochromatic_sed to pass.
-                      # Not sure why, since I thought straight nyquist should be good enough.
-                      # But if it's needed there, it's probably worth always doing, rather than
-                      # having that test use iimult=2.  And definitions of Nyquist are somewhat
-                      # confusing, so it's possible that we should expect to need a factor of
-                      # 2 smaller than nyquist for the pixel scale.  :-S
-        if iimult is not None:
-            iiscale /= iimult
-
-        # Prevent infinite recursive loop by using ChromaticObject.drawImage() on a
-        # ChromaticConvolution.
-        if isinstance(insep_obj, ChromaticConvolution):
-            effective_prof_image = ChromaticObject.drawImage(
-                    insep_obj, bandpass, scale=iiscale,
-                    integrator=integrator, method='no_pixel')
-        else:
-            effective_prof_image = insep_obj.drawImage(
-                    bandpass, scale=iiscale, integrator=integrator,
-                    method='no_pixel')
-
-        return InterpolatedImage(effective_prof_image, gsparams=gsparams)
 
     @staticmethod
     def resize_effective_prof_cache(maxsize):
@@ -2811,7 +2918,8 @@ class ChromaticConvolution(ChromaticObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d.pop('sed',None)
+        d.pop('sed', None)
+        d.pop('ref_sed', None)
         return d
 
     def __setstate__(self, d):
@@ -2968,7 +3076,7 @@ class ChromaticConvolution(ChromaticObject):
         # If program gets this far, the objects in obj_list should be atomic (non-ChromaticSum
         # and non-ChromaticConvolution).  (The latter case was dealt with in the constructor.)
 
-        # setup output image (semi-arbitrarily using the bandpass effective wavelength)
+        # Setup output image using fiducial profile
         wave0, prof0 = self._fiducial_profile(bandpass)
         image = prof0.drawImage(image=image, setup_only=True, **kwargs)
         _remove_setup_kwargs(kwargs)
@@ -3016,8 +3124,8 @@ class ChromaticConvolution(ChromaticObject):
             if not obj.separable:
                 continue
             wave0, prof0 = obj._fiducial_profile(bandpass)
-            sep_profs.append(prof0 / obj.sed(wave0))
-            insep_obj *= obj.sed
+            sep_profs.append(prof0 / obj.ref_sed(wave0))
+            insep_obj *= obj.ref_sed
 
         # Collapse inseparable profiles and chromatic normalizations into one effective profile
         # Note that at this point, insep_obj.sed should *not* be None.
@@ -3052,7 +3160,8 @@ class ChromaticConvolution(ChromaticObject):
 
 
 ChromaticConvolution._effective_prof_cache = utilities.LRU_Cache(
-    ChromaticConvolution._get_effective_prof, maxsize=10)
+    lambda obj, bandpass, iimult, integrator, gsparams: obj._get_effective_prof(
+        bandpass, iimult, integrator, gsparams), maxsize=10)
 
 
 class ChromaticDeconvolution(ChromaticObject):
@@ -3187,6 +3296,14 @@ class ChromaticAutoConvolution(ChromaticObject):
     def sed(self):
         return self._obj.sed * self._obj.sed
 
+    @lazy_property
+    def ref_sed(self):
+        return self._obj.ref_sed * self._obj.ref_sed
+
+    @lazy_property
+    def ref_flux(self):
+        return self._obj.ref_flux**2
+
     @property
     def gsparams(self):
         """The `GSParams` for this object.
@@ -3224,7 +3341,8 @@ class ChromaticAutoConvolution(ChromaticObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d.pop('sed',None)
+        d.pop('sed', None)
+        d.pop('ref_sed', None)
         return d
 
     def __setstate__(self, d):
@@ -3292,6 +3410,14 @@ class ChromaticAutoCorrelation(ChromaticObject):
     def sed(self):
         return self._obj.sed * self._obj.sed
 
+    @lazy_property
+    def ref_sed(self):
+        return self._obj.ref_sed * self._obj.ref_sed
+
+    @lazy_property
+    def ref_flux(self):
+        return self._obj.ref_flux**2
+
     @property
     def gsparams(self):
         """The `GSParams` for this object.
@@ -3329,7 +3455,8 @@ class ChromaticAutoCorrelation(ChromaticObject):
 
     def __getstate__(self):
         d = self.__dict__.copy()
-        d.pop('sed',None)
+        d.pop('sed', None)
+        d.pop('ref_sed', None)
         return d
 
     def __setstate__(self, d):
