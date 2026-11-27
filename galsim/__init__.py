@@ -138,6 +138,7 @@ from .deltafunction import *
 from .shapelet import *
 from .inclined import *
 from .knots import *
+from .spiral import *
 
 from .sum import *
 from .convolve import *
